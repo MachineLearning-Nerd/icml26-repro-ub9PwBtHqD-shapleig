@@ -15,19 +15,5 @@
   "title": "Repro - ShaplEIG",
   "last_page": "conclusion",
   "local_dashboards": {},
-  "artifacts_bucket": "DineshAI/ub9PwBtHqD-artifacts",
-  "local_path_artifacts": [
-    {
-      "path": "outputs/c2_greedy_vs_random.csv",
-      "abs_path": "/home/dineshai/Drives/Code/AllCode/ReproduceICML/papers/icml26-repro-ub9PwBtHqD-shapleig/outputs/c2_greedy_vs_random.csv",
-      "size": 2380,
-      "artifact_type": "dataset"
-    },
-    {
-      "path": "outputs/c1_closed_form_eig.csv",
-      "abs_path": "/home/dineshai/Drives/Code/AllCode/ReproduceICML/papers/icml26-repro-ub9PwBtHqD-shapleig/outputs/c1_closed_form_eig.csv",
-      "size": 577,
-      "artifact_type": "dataset"
-    }
-  ]
+  "artifacts_bucket": "DineshAI/ub9PwBtHqD-artifacts"
 }
