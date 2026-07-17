@@ -1,0 +1,24 @@
+{
+  "paper": "ShaplEIG (arXiv 2606.02247, ub9PwBtHqD)",
+  "claims": {
+    "C1_closed_form_EIG": {
+      "claim": "C1 closed-form EIG",
+      "cases": 8,
+      "worst_abs_err_vs_mc": 0.002337706131502637,
+      "posterior_cov_schur_err": 9.43689570931383e-16,
+      "matches_mc": 1.0
+    },
+    "C2_greedy_beats_random": {
+      "claim": "C2 greedy-EIG beats random",
+      "trials": 18,
+      "greedy_lower_det_fraction": 1.0,
+      "greedy_lower_trace_fraction": 0.7222222222222222,
+      "greedy_lower_realized_mse_fraction": 0.4444444444444444,
+      "greedy_wins": true
+    }
+  },
+  "verdict": {
+    "C1_verified": 1.0,
+    "C2_verified": true
+  }
+}

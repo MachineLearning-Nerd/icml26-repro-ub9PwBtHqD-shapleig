@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "title": "Repro - ShaplEIG (Bayesian Design for Shapley)",
+  "emoji": "📡",
+  "space_id": "DineshAI/ub9PwBtHqD",
+  "paper": {
+    "arxiv_id": "2606.02247",
+    "openreview_id": "ub9PwBtHqD"
+  },
+  "tags": [
+    "icml2026-repro",
+    "paper-ub9PwBtHqD"
+  ],
+  "updated_at": "2026-07-17T05:50:11+00:00",
+  "root": {
+    "slug": "index",
+    "title": "Repro - ShaplEIG (Bayesian Design for Shapley)",
+    "file": "pages/index.md",
+    "children": [
+      {
+        "slug": "claim-1-closed-form-eig",
+        "title": "Claim 1 — Closed-form EIG",
+        "file": "pages/claim-1-closed-form-eig/page.md",
+        "children": []
+      },
+      {
+        "slug": "claim-2-greedy-acquisition",
+        "title": "Claim 2 — Greedy acquisition",
+        "file": "pages/claim-2-greedy-acquisition/page.md",
+        "children": []
+      },
+      {
+        "slug": "methods-environment",
+        "title": "Methods & environment",
+        "file": "pages/methods-environment/page.md",
+        "children": []
+      },
+      {
+        "slug": "negative-controls",
+        "title": "Negative controls",
+        "file": "pages/negative-controls/page.md",
+        "children": []
+      },
+      {
+        "slug": "conclusion",
+        "title": "Conclusion",
+        "file": "pages/conclusion/page.md",
+        "children": []
+      }
+    ]
+  },
+  "agent_view_tokens": 1802,
+  "revision": "1784267411305171057"
+}

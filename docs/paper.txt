@@ -1,0 +1,5254 @@
+ShaplEIG: Bayesian Experimental Design for Shapley Value Estimation
+
+David Rundel 1 2 Fabian Fumagalli 1 2 Maximilian Muschalik 3 2 Bernd Bischl 1 2 Matthias Feurer 4 5
+
+arXiv:2606.02247v1 [stat.ML] 1 Jun 2026
+
+Abstract
+
+1. Introduction
+With its origin in cooperative game theory, the Shapley value
+(SV; Shapley et al., 1953) has emerged as a central tool in
+explainable AI for axiomatic attribution values (Rozemberczki et al., 2022). The exact computation of SVs can be
+computationally demanding for two main reasons: First, the
+number of coalitions grows exponentially with the number
+of players p; and second, the cost of evaluating the value
+function for each of those coalitions can be high, ranging
+from single model predictions (Lundberg & Lee, 2017),
+through the computation of conditional expectations (Frye
+et al., 2021), to full model retraining (Ghorbani & Zou,
+2019; Tay et al., 2022), or even complete hyperparameter
+optimization runs (Wever et al., 2026). Costly value functions are also common in applications of SVs outside AI,
+such as in the field of expensive computer experiments and
+global sensitivity analysis, where, alongside Sobol indices,
+SVs provide a variance-based measure of the contribution
+of inputs to the output of a complex system within a functional ANOVA (fANOVA) framework (Owen, 2014; Benoumechiara & Elie-Dit-Cosaque, 2019).
+Even for cheap value functions, the naive exact computation
+of SVs is typically infeasible, motivating a broad class of
+stochastic approximation methods (Chen et al., 2023). Early
+approaches primarily relied on Monte Carlo estimation (Castro et al., 2009; Kwon & Zou, 2022), while more recent
+methods, such as Kernel SHAP (Lundberg & Lee, 2017),
+Leverage SHAP (Musco & Witter, 2025) and Regression
+MSR (Witter et al., 2025), fit surrogate models to the value
+function and derive SV estimates from these surrogates.
+However, both types of approaches rely on collections of
+value function evaluations for coalitions which are typically
+sampled from fixed, predefined distributions. Especially
+for expensive value functions, for which the evaluation budget is extremely limited, this naturally raises the question
+of whether SV approximation quality can be improved by
+adaptively selecting coalitions for evaluation based on previous evaluations (Slack et al., 2021; Burgess & Chapman,
+2021).
+Bayesian experimental design (BED; Lindley, 1956; 1972;
+Chaloner & Verdinelli, 1995; Sebastiani & Wynn, 2000;
+Ryan et al., 2016) provides a principled framework for such
+sequential design of experiments (Jones et al., 1998; Santner
+et al., 2018). It relies on surrogate models and the expected
+
+Shapley values are a principled attribution measure widely used in interpretable machine learning, but their exact computation scales exponentially with the number of players, motivating a
+wide range of approximation methods based on
+value function evaluations of sampled coalitions.
+This raises the question of whether approximation
+accuracy can be improved by adaptively selecting coalitions for evaluation based on previous
+evaluations. This is particularly relevant in settings where the value function is costly and the
+number of evaluations is severely limited, such as
+retraining-based feature importance, data valuation, and hyperparameter importance.
+For this purpose, we propose ShaplEIG, a
+Bayesian experimental design approach that approximates the expensive value function using a
+Gaussian process surrogate and adaptively selects
+coalitions based on their expected information
+gain about the Shapley values. By the linearity of
+the Shapley values in the value function, we show
+that the expected information gain is available in
+closed form. Furthermore, we propose an efficient
+computation scheme that reduces the complexity
+from exponential to polynomial in the number of
+players via elementary symmetric polynomials.
+In extensive experiments across diverse costly applications, our method consistently improves sample efficiency in the low-budget regime over stateof-the-art baselines.
+
+1
+Department of Statistics, LMU Munich, Munich, Germany 2 Munich Center for Machine Learning, Munich, Germany 3 Institute for Informatics, LMU Munich, Munich, Germany
+4
+Department of Computer Science, TU Dortmund University, Dortmund, Germany 5 Lamarr Institute for Machine Learning and Artificial Intelligence, Dortmund, Germany. Correspondence to: David
+Rundel <david.rundel@stat.uni-muenchen.de>, Matthias Feurer
+<matthias.feurer@tu-dortmund.de>.
+
+Proceedings of the 43 rd International Conference on Machine
+Learning, Seoul, South Korea. PMLR 306, 2026. Copyright 2026
+by the author(s).
+
+1
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+information gain (EIG), an information-theoretic criterion,
+to select candidates for evaluation in order to efficiently
+infer function properties. Several instances of BED can be
+found throughout statistics and ML, with the family of entropy search–based acquisition functions (Hennig & Schuler,
+2012; Hernández-Lobato et al., 2014) in Bayesian optimization (BO; Garnett, 2023) being a prominent example, where
+the target property is the function optimum. Despite its
+theoretical appeal, adoption of BED in ML has been limited,
+primarily due to the lack of closed-form expressions for the
+EIG (Foster, 2021; Rainforth et al., 2024). In particular, it
+has received comparatively little attention in the context of
+SV estimation and interpretable ML in general.
+Our contributions are as follows:
+
+This is the player’s marginal contribution to the game, averaged over all possible coalitions, with weights proportional
+to coalition sizes. Direct evaluation of Equation 1 is only
+computationally feasible for small to moderate values of p,
+as the number of coalitions grows exponentially in p, and
+when evaluations of the value function ν are inexpensive.
+Approximation Methods. A straightforward approach
+to approximating Equation 1, or reformulations thereof, is
+computing a Monte Carlo estimate based on sampled coalitions S ⊂ 2P . These estimators are generally unbiased,
+and depending on the reformulation and coalition sampling
+procedure used, differ in estimator variance and capability
+to simultaneously use value function evaluations for the estimation of all SVs ϕ := (ϕ1 , . . . , ϕp )⊤ ∈ Rp across players.
+Notable variants include permutation sampling (Castro et al.,
+2009), maximum sample reuse (MSR; Wang & Jia, 2023),
+and SVARM (Kolpaczki et al., 2024). A number of variancereduction strategies have been proposed within this Monte
+Carlo framework, including stratified, antithetic or paired
+sampling of complementary coalitions (Mitchell et al., 2022;
+Covert & Lee, 2021), and biased sampling toward coalitions
+near the extremes of subset cardinality, referred to as the
+border trick (Fumagalli et al., 2023). While these techniques
+can substantially improve efficiency, they still rely on fixed,
+non-adaptive sampling distributions.
+In contrast, surrogate-based methods reduce SV estimation
+to a supervised regression problem by fitting a surrogate
+model ν̂ : 2P → R to the value function using coalitions S
+sampled according to any of the aforementioned strategies.
+The SVs are then approximated as ϕ(ν) ≈ ϕ(ν̂). Kernel
+SHAP, Leverage SHAP, and PolySHAP (Fumagalli et al.,
+2026) are special cases of this framework, using a linear
+surrogate model and a tailored regression objective. More
+recently, Regression MSR employs tree-based surrogates,
+such as XGBoost (Chen & Guestrin, 2016), in combination
+with TreeSHAP (Lundberg et al., 2020), and demonstrates
+state-of-the-art performance. A key requirement for the surrogate model is that SVs can be extracted efficiently, even for
+large player sets, as is the case for linear models where they
+correspond directly to the model’s coefficients. Furthermore,
+the surrogate should yield a consistent estimator, i.e., the
+estimates converge to the true SVs once all 2p coalitions are
+evaluated. While Kernel SHAP and Leverage SHAP employ
+regression objectives that guarantee consistency, tree-based
+surrogates do not yield consistent estimates by default and
+therefore require an additional “adjustment” step via MSR
+on the residuals ν(S) − ν̂(S).
+
+• We introduce ShaplEIG, a novel, BED-based method
+that approximates expensive value functions in SV
+estimation via a Gaussian process (GP) surrogate with
+a Hamming kernel, adaptively selects coalitions for
+evaluation based on the EIG, and yields a consistent
+SV estimator.
+• We show that the EIG of a candidate coalition about the
+SVs admits a closed-form expression. This is achieved
+by exploiting the linearity of SVs in the value function and by framing sequential coalition selection as a
+Bayesian linear inverse problem under a GP surrogate.
+• We propose an efficient computation scheme for the
+EIG that exploits the multiplicative structure of the
+Hamming kernel via a correspondence to elementary
+symmetric polynomials (ESPs), reducing the computational cost from exponential to polynomial in the
+number of players.
+• Through extensive experiments on several costly, smallto moderately large games (8 ≤ p ≤ 101), we demonstrate improved estimation accuracy and sample efficiency in the low-budget regime compared with stateof-the-art baselines. These games include retrainingbased tasks - feature importance for TabPFN, data
+valuation and hyperparameter importance of learning
+algorithms such as XGBoost - as well as local explanations for vision models.
+
+2. Methodological Background
+2.1. Shapley Values
+For a set P := {1, . . . , p} of p players, such as features or
+data points, the SV aggregates the value function ν : 2P →
+R of all 2p coalitions into a single attribution score for each
+player i ∈ P as
+
+
+X
+1
+ ν(S ∪ {i}) − ν(S) . (1)
+ϕi (ν) :=
+p−1
+p · |S|
+S⊆P \{i}
+
+2.2. Bayesian Experimental Design
+BED considers an expensive-to-evaluate black-box function
+f : X → R, defined over a bounded input space X ⊆ Rd ,
+and leverages probabilistic surrogate models together with
+2
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+information-theoretic criteria to efficiently infer a function
+property of interest φ(f ) ∈ Rm under a limited budget of
+function evaluations. We assume that a function evaluation
+corresponds to a noisy experiment y(x) := f (x) + ϵ at a
+design x ∈ X , with homoscedastic, additive Gaussian noise
+ϵ ∼ N (0, σϵ2 ) that is i.i.d. across evaluations.
+In this work, we focus on the sequential setting with the
+greedy Bayesian adaptive design (BAD; Cheng & Shen,
+2005) algorithm, which at each iteration t > T0 selects the
+next design x by maximizing the EIG:
+
+(t)
+EIGφ(f ) (x) := I φ(f ); y(x) | Dt
+
+= H φ(f ) | Dt
+(2)
+
+
+− Ep(y(x)|Dt ) H φ(f ) | y(x), Dt .
+
+Here, Dt := { x(i) , y(x(i) ) }t−1
+i=1 denotes the dataset of all
+previous evaluations, including an initial design of size T0 .
+The EIG expresses the mutual information I between the
+function property φ(f ) and the function evaluation y(x),
+conditioned on Dt . Intuitively, this criterion selects the
+design whose associated function evaluation is expected to
+maximize the reduction in uncertainty about the property.
+We measure uncertainty using the differential entropy H
+based on the posterior distribution of the surrogate model
+given previously observed data Dt (Rainforth et al., 2024;
+Huan et al., 2024).
+Bayesian surrogate models are used to regress the latent
+function f on x. A common choice is to place a GP prior
+on the latent function f (Krause et al., 2008; Houlsby et al.,
+2011; Hennig & Schuler, 2012; Neiswanger et al., 2021).
+GPs are particularly suitable in this context, as they allow
+exact Bayesian inference in closed form and provide wellcalibrated uncertainty estimates even in data-scarce regimes.
+We briefly introduce GPs in Appendix A.1.
+
+specialized techniques to enhance its practical applicability
+(Houlsby et al., 2011; Heinrich et al., 2020; Goda et al.,
+2020), there also exist special cases where the associated
+computations are tractable (Attia et al., 2018).
+Bayesian Linear Inverse Problems. A Bayesian linear
+inverse problem consists of an unknown parameter θ ∈ Rs
+that is to be inferred from experimental data y(x) ∈ R.1
+This data is assumed to be generated according to a linear
+observation model, y(x) = F (x)⊤ θ + ϵ, where F (x) ∈ Rs
+denotes the parameter-to-observable mapping depending
+on the experimental design x, and ϵ ∼ N (0, σϵ2 ) is additive
+Gaussian noise. Assuming a Gaussian prior on the parameter, i.e., θ ∼ N (µθ , Σθ ), the posterior distribution θ | y(x)
+is again Gaussian, with covariance given by
+
+−2
+⊤ −1
+Σ(θ|y(x)) = Σ−1
+.
+θ + F (x)σϵ F (x)
+In many applications, the primary quantity of interest is
+not the parameter itself, but an end-goal φ(θ) ∈ Rm that
+depends on θ. For a linear goal operator A ∈ Rm×s with
+full row rank, the end-goal is a linear transformation of
+the parameter, i.e., φ(θ) = Aθ. Applying BED in this
+setting to select experimental data with the goal of reducing
+uncertainty about φ(θ) corresponds to a specific instance
+of goal-oriented optimal design of experiments (GOODE;
+Lieberman & Willcox, 2013), which is closely related to
+Bayesian DA -optimality. Notably, the EIG of a design x
+with respect to the linear end-goal can be expressed in closed
+form as
+
+EIGφ(θ) (x) = I φ(θ); y(x)
+
+= − 12 log det AΣ(θ|y(x)) A⊤ + C, (3)
+where C is constant with respect to x (but may depend on
+A and Σθ ; see Attia et al. (2018) for a proof). Moreover,
+the EIG depends only on the experimental design x and not
+on the associated outcome y(x) (Bui-Thanh et al., 2013;
+Alexanderian et al., 2016; Spantini et al., 2017; Zhong et al.,
+2026).
+
+EIG Estimation. The second term of the EIG in Equation
+2 is itself an expectation of an entropy, yielding a nested
+expectation structure over potentially intractable posteriors. Although the posterior predictive distribution (PPD)
+p(y(x) | Dt ) is explicit for many surrogate types such as
+GPs, the conditional property posterior p(φ(f ) | y(x), Dt )
+is generally not. It can be approximated using standard methods if p(y(x) | φ(f ), Dt ) is explicit; otherwise, likelihoodfree approaches (Csilléry et al., 2010) are often employed.
+In both cases, however, the normalized posterior density
+of the property is required for entropy estimation (Foster,
+2021; Rainforth et al., 2024). Finally, because this entropy
+term is nested within the expectation over the PPD, which
+may itself be intractable, nested estimation strategies are
+often needed.
+As a consequence, estimating the EIG poses a fundamental challenge in BED, both in terms of the accuracy of the
+resulting estimates and the associated computational cost.
+While a large body of research has focused on developing
+
+3. BED for SV Estimation
+Prior work on approximating SVs typically relies on evaluated coalitions drawn from a fixed, predefined distribution.
+However, when value function evaluations are costly and
+only a limited number are possible, sampling without leveraging information from previous evaluations may result in
+wasted resources. Instead, we propose an adaptive approach,
+which we call ShaplEIG, that iteratively expands the collection optimally based on previously observed evaluations.
+Specifically, we propose a greedy BAD approach (see Algorithm 1) that iteratively trains a GP surrogate for the value
+1
+Here, we restrict our attention to the case of a single experimental observation.
+
+3
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+Algorithm 1 ShaplEIG algorithm
+
+advantageous in our context, as it enables efficient EIG computation schemes (Section 3.4).
+At each iteration t of the sequential procedure and for fixed
+kernel hyperparameters ξ, the GP surrogate coupled with the
+available data Dt induces a closed-form multivariate normal
+distribution (MVN) over the value function evaluated across
+p
+all coalitions ν := ν(Z) ∈ R2 ,2 i.e.,
+
+Require: GP prior ν ∼ GP(m, kξ ), initial design and candidate set C0 , C ⊆ {1, . . . , 2p } with |C0 | = T0 and
+C0 ∩ C = ∅
+
+1: Initialize dataset: DT0 +1 := { z(i) , ν(z(i) ) }i∈C0
+2: for t = T0 + 1 to T do
+(t)
+3:
+Optimize EIG: g(t) := arg maxi∈C EIGϕ (z(i) )
+
+4:
+Update dataset: Dt+1 := Dt ∪{ z(g(t)) , ν(z(g(t)) ) }
+5:
+Update candidate set: C := C \ {g(t)}
+6:
+Refit hyperparameters: ξ := arg maxξ p(ξ | Dt+1 )
+7: end for
+8: return Consistent SV estimates: ϕ̂ := µϕ|DT +1
+
+ν | Dt , ξ ∼ N2p (µν|Dt ,ξ , Σν|Dt .ξ ).
+3.2. Consistent SV Estimation
+The SVs across players, ϕ ∈ Rp , depend on the value
+function ν only through a linear transformation of ν, as
+implied by the linearity axiom of SVs (Shapley et al., 1953),
+i.e.,
+!
+1 − 1S
+1S
+−
+
+ν,
+ϕ(ν) = Aν :=
+p−1
+p · |S|−1
+p · p−1
+|S|
+
+function (Section 3.1) which yields a consistent estimator
+for the SVs (Section 3.2). It operates on an initial design
+of coalition evaluations and at each iteration (1) optimizes
+the EIG about the SVs over candidate coalitions, leveraging
+a closed-form expression for the EIG (Section 3.3) and an
+efficient computation scheme (Section 3.4), (2) evaluates
+the newly selected coalition, and (3) updates the GP surrogate using the newly acquired data, thereby retraining the
+GP hyperparameters to ensure adaptivity of the subsequent
+experimental design (Section 3.3).
+By slight abuse of notation, we define ν equivalently on
+binary indicator vectors z ∈ {0, 1}p via their bijective correspondence with coalitions S ⊆ P . Furthermore, we collect
+p
+all 2p such vectors as rows of a matrix Z ∈ {0, 1}2 ×p and
+denote its i-th row as z(i) := Zi . The previously observed
+coalition–evaluation pairs at iteration t are gathered in
+Dt := { z(g(i)) , ν(z(g(i)) ) }t−1
+i=1 , with g : {1, . . . , t − 1} →
+{1, . . . , 2p } mapping each iteration index to the row index
+in Z of the coalition selected at that iteration.
+
+S⊆P
+
+p
+
+where A ∈ Rp×2 and 1S denotes the indicator vector of
+coalition S over the player set P .3 As a consequence, at
+iteration t the posterior distribution over the SVs under the
+GP surrogate is available in closed form (Chau et al., 2023)
+and given by:
+ϕ(ν) | Dt ∼ Np (Aµν|Dt , AΣν|Dt A⊤ )
+= Np (µϕ|Dt , Σϕ|Dt ).
+Based on this, we extract SV estimates from the surrogate via ϕ̂ := ϕ(ν̂) = µϕ|Dt . Importantly, for noiseless GPs (see Appendix A.1), this estimator is consistent
+by construction: when the surrogate is trained on all 2p
+coalitions, i.e., under D2p +1 , we recover the exact SVs,
+µϕ|D2p +1 = ϕ(ν). This follows directly from the interpolation property (Stein, 1999; Williams & Rasmussen, 2006),
+namely µν(z)|D2p +1 = ν(z) for all z ∈ {0, 1}p . The consistency of our estimator stands in contrast to recently proposed
+tree-based surrogate approaches such as Regression MSR,
+which require additional adjustment steps. For a discussion of noisy GP alternatives, estimator bias, and debiasing
+schemes, see Appendix B.1.
+
+3.1. GP Surrogate with Hamming Kernel
+We model the value function using a GP surrogate (see Appendix A.1 for an introduction). While the use of a surrogate
+is related to existing, popular methods from SV estimation,
+we depart from these approaches in our choice of surrogate, as our use is primarily motivated by adaptive coalition
+selection based on the EIG. In this context, we require a
+nonlinear, fully probabilistic model capable of handling
+low-data regimes. GPs are better aligned with this goal and
+yield further advantages that will become apparent in the
+following sections.
+As a covariance function, we employ the Hamming distance kernel (Platt et al., 2001; Qian et al., 2008; Hutter,
+2009; see Appendix A.1), which quantifies similarities between coalitions in the binary input space via weighted
+Hamming distances. The associated weights ξ ∈ Rp are
+treated as learnable hyperparameters. This kernel is a common choice for categorical input spaces and is especially
+
+3.3. Closed-form EIG
+As the GP surrogate is iteratively trained on value function observations, each potential subsequent evaluation
+ν ′ (z(i) ) ∈ R for a candidate coalition z(i) at iteration t
+partially reveals information about ν and induces an updated posterior distribution, i.e., ν | ν ′ (z(i) ), Dt . Note that
+2
+
+For notational convenience, we omit explicit conditioning on
+ξ in the following, and denote µν|Dt := µν|Dt ,ξ and Σν|Dt .ξ :=
+Σν|Dt .
+
+3
+We adopt the convention that nk = 0 for k > n and k < 0
+together with 0/0 := 0.
+
+4
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+each such evaluation constitutes experimental data generated by a linear observation model, i.e., ν ′ (z(i) ) = e⊤
+i ν + ϵ.
+p
+Here, ei ∈ R2 denotes the i-th standard basis vector, which
+simply selects the single entry of ν corresponding to the
+value of z(i) , while ϵ is assumed to be zero-mean Gaussian
+noise with variance fixed to a small constant for numerical
+stability.
+Consequently, adaptively selecting data for surrogate training can be viewed as a Bayesian linear inverse problem
+with ν taking the role of the unknown parameter (θ in Section 2.2) and ei acting as the parameter-to-observable mapping (F (x) in Section 2.2). Furthermore, selecting coalitions to efficiently infer the SVs constitutes an instance of
+GOODE (Lieberman & Willcox, 2013): The SVs ϕ are
+given by a linear transformation of the unknown parameter ν and can be interpreted as a linear end-goal of the
+corresponding Bayesian linear inverse problem (φ(f ) in
+Section 2.2), with A acting as the linear goal operator. As a
+consequence, the EIG of z(i) about ϕ is available in closed
+form as:
+
+(t)
+EIGϕ (z(i) ) ∝ − log det AΣν|ν ′ (z(i) ),Dt A⊤ + C (4)
+
+= − log det Σϕ|ν ′ (z(i) ),Dt + C.
+(5)
+
+readers how this covariance-based criterion affects coalition
+selection in practice, and when it can be expected to provide benefits over alternative coalition selection strategies.
+In Appendix B.2, we provide a detailed discussion of this
+matter together with intuitive examples of games and the
+behavior of different coalition selection strategies to further
+illustrate these concepts.
+In summary, for each candidate coalition, the EIG considers how an evaluation reduces uncertainty about the value
+function across all coalitions, and how this propagates to
+the SVs according to the covariance structure induced by
+the GP. This stands in contrast to current state-of-the-art
+approaches for coalition sampling (e.g., leverage score sampling; Musco & Witter, 2025), which sample coalitions from
+fixed distributions and do not distinguish between different
+coalitions of the same size. Consequently, for asymmetric
+games, e.g., with interactions occurring primarily among
+a subset of relevant players, we expect the EIG to provide
+substantial benefits over traditional approaches.
+3.4. Efficient Computation
+In the following, we present an efficient computation
+scheme for the quantities associated with our proposed
+ShaplEIG framework, primarily the EIG. We also analyze the computational complexity of this approach and
+contrast it with a naive implementation.
+In Appendix B.3, we derive that the EIG of z(i) about ϕ can
+be equivalently expressed as:
+h 
+ i
+(t)
+2
+EIGϕ (z(i) ) ∝ C ′ + log e⊤
+(6)
+i Σ(ν|Dt ) + σϵ I ei
+h 
+ i
+2
+− log e⊤
+i Σ(ν|Dt ) + σϵ I − Q ei .
+
+This shows that SVs belong to a structural class of function
+properties for which the EIG admits a closed-form solution
+under GP surrogates.
+Adaptivity. We note that the EIG depends only on the
+GP’s posterior covariance, not on its mean. At iteration
+t, this covariance is determined solely by the previously
+selected coalitions and not directly by the associated evaluations (see Equation 9 in Appendix A.1). However, the
+GP hyperparameters ξ are learned at each iteration from all
+data Dt acquired so far. As a result, previous evaluations
+have an indirect effect on the EIG, because they affect the
+kernel hyperparameters, which in turn influence the posterior covariance and thus the acquisition criterion. Without
+this retraining, the iterative procedure would collapse into
+a so-called non-adaptive experimental design, in which the
+designs do not depend on previous outcomes and can be
+fully determined before data collection (Huan et al., 2024).
+Similarly, when using a linear surrogate model with fixed
+basis functions and noise variance, as in Kernel SHAP, the
+uncertainty of the SV estimates depends only on the previously selected coalitions, and not on the associated evaluations (Slack et al., 2021; Huan et al., 2024). Consequently,
+classical criteria for experimental design - including DA optimality, which is closely related to the EIG in our setting
+- yield designs that are not adaptive with respect to previous evaluations. This further motivates our use of a GP
+surrogate.
+
+p
+
+p
+
+Here, C ′ is constant, I ∈ R2 ×2 is the identity matrix, and
+2p ×2p
+Qi,i = e⊤
+, is
+i Qei , the i-th diagonal entry of Q ∈ R
+defined as
+
+⊤
+−1
+Qi,i = AΣ(ν|Dt ) ei
+AΣ(ν|Dt ) A⊤
+AΣ(ν|Dt ) ei .
+(i)
+In particular, e⊤
+i Σ(ν|Dt ) ei = Var(ν(z ) | Dt ) ∈ R reduces to the marginal posterior variance of ν(z(i) ), and
+p
+Σ(ν|Dt ) ei = Cov(ν; ν(z(i) ) | Dt ) ∈ R2 corresponds to
+the posterior covariance between ν and ν(z(i) ). However,
+Qi,i depends on the inverse of AΣ(ν|Dt ) A⊤ ∈ Rp×p , and
+therefore on the full posterior covariance matrix across all
+p
+p
+coalitions, Σ(ν|Dt ) ∈ R2 ×2 .
+
+Naive EIG Computation. In a naive approach to computing the EIG for a specific candidate z(i) , one could first
+compute the full covariance matrix Σ(ν|Dt ) and then obtain
+all required terms via projections with A or slices using ei .
+In this case, the overall computational cost is dominated by
+O(4p · t) (see the posterior covariance matrix computation
+in Appendix A.1). This complexity is exponential in p and
+therefore prohibitively expensive in many settings.
+
+Practical Implications. Despite the mathematical formulation of the EIG in closed form, it may still be unclear to
+5
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+4. Related Work
+
+Efficient EIG Computation. However, we now show that
+the EIG can be computed much more efficiently, reducing
+the exponential scaling in p to polynomial.
+Theorem 3.1. The EIG about the SVs ϕ for a candidate
+coalition z(i) ∈ {0, 1}p is computable in O(p4 + t3 ).
+
+Our proposed method is closely related to the pool-based
+active learning literature (Lewis & Gale, 1994; Settles,
+2009; Houlsby et al., 2011; Gal et al., 2017), where
+the goal is to train a model efficiently in an adaptive
+manner. In this context, it is closest to transductive, or
+similarly prediction-oriented, BED variants (Yu et al.,
+2006; Hübotter et al., 2024), where the quantities of
+interest are the model predictions at a set of input points
+(in our setting, these correspond to the GP predictions of
+the value function across all coalitions). However, our
+EIG criterion directly targets the SVs, which are a linear
+transformation of the value function. It therefore differs
+from commonly used approaches in this literature and yields
+both information-theoretic and computational advantages.
+In particular, information-based transductive learning (ITL;
+MacKay, 1992), i.e., the EIG for the untransformed value
+function vector ν, would collapse in our setting to the
+purely exploratory uncertainty sampling (US; Lewis &
+Catlett, 1994), i.e., selecting the coalition with the highest
+surrogate uncertainty (Krause et al., 2008), thereby ignoring
+how an evaluation reduces uncertainty at points beyond
+the candidate itself. The expected predictive information
+gain (EPIG; Smith et al., 2023), another popular variant,
+would incur prohibitively high computational cost when
+considering all coalitions in the target distribution. Lastly,
+although our approach can be framed as active testing
+(Kossen et al., 2021; 2022; see Appendix B.1), it is more
+general in that the quantity of interest is not restricted to
+a scalar-valued linear transformation of the function. We
+refer to Appendix C for further details.
+Furthermore, several lines of prior work in SV estimation
+are related to our approach in that they exploit the predictive
+uncertainty of surrogates to guide the iterative selection
+of coalitions, or employ GPs as surrogate models. Slack
+et al. (2021) proposed BayesSHAP, which uses a Bayesian
+linear model as a surrogate to obtain point estimates of
+SVs together with uncertainty estimates. In addition,
+they proposed selecting queries using US. Mitchell et al.
+(2022) used GP surrogates with specialized kernels over
+permutations and Bayesian quadrature (BQ; Larkin,
+1972; O’Hagan, 1991; Rasmussen & Ghahramani, 2003)
+to extract SVs, as well as sequential BQ (Huszár &
+Duvenaud, 2012) to select permutations for evaluation.
+Similarly, Nguyen et al. (2025) proposed to actively select
+coalitions using GP surrogates with kernels defined over
+data distributions for data valuation. However, in both
+of the latter two approaches, the selection criteria target
+uncertainty reduction for the SV of a single player rather
+than jointly across all players. Moreover, these methods rely
+on fixed kernels, which leads to non-adaptive experimental
+designs.
+Beyond this, there exist various model-specific methods
+
+Proof. We present the (somewhat lengthy) proof in Appendix B.4. It is based on two further theorems: First, Theorem B.1, which shows how the linear term AKξ (Z, z(i) ) ∈
+Rp , where Kξ denotes the kernel matrix (see Appendix A.1),
+required for the computation of AΣ(ν|Dt ) ei , can be computed in O(p2 ). Second, Theorem B.2, which shows how
+the quadratic term AKξ (Z, Z)A⊤ ∈ Rp×p , required for the
+computation of AΣ(ν|Dt ) A⊤ , can be computed in O(p4 ).
+Both of these results are achieved by rewriting the terms as
+weighted sums of kernel evaluations across coalitions, then
+recognizing that many of these kernel evaluations share the
+same weights, and that the sums over groups of kernel values with identical weights can be computed more efficiently
+by identifying them with scaled, uni- or bivariate elementary
+symmetric polynomials (ESPs; van Es & Helmers, 1988;
+Macdonald, 1998; Charalambides, 2018), thereby exploiting
+the multiplicative structure of the Hamming kernel. We then
+tie all of this together in Theorem B.3 for the complete EIG
+computation.
+The approach for the linear part is similar to the computation
+of products between Shapley weights and a kernel matrix
+proposed by Mohammadi et al. (2025a). However, our
+overall setup deviates from theirs, which leads our derivation
+to be based on scaled ESPs rather than the unscaled variant
+they use. Furthermore, we are not aware of any prior work
+regarding the quadratic part.
+Vectorized EIG Computation. Consider the setting in
+which the EIG is evaluated for a set of candidate coalitions
+W ⊆ {0, 1}p . We show in Appendix B.4.1 that this can be
+efficiently vectorized across candidates, scaling as O(p4 +
+t3 + |W| · t2 ). In particular, the first two additive terms,
+which dominate the computational cost in many settings,
+are associated with operations that are independent of the
+specific candidate and thus scale independently of |W|,
+while all remaining candidate-specific operations can be
+efficiently vectorized. For games with small p, this even
+enables exhaustive EIG optimization across all candidates.
+Efficient SV Computation. Like the EIG, the SV estimates ϕ̂ = Aµν|Dt (Section 3.2) can be computed efficiently. This follows immediately by applying Theorem
+B.1 to the expanded form of µν|Dt (see Appendix A.1),
+resulting in a computational complexity of O(t3 ) for SV
+estimation. Similarly, the posterior covariance of the SVs,
+Σϕ|Dt = AΣ(ν|Dt ) A⊤ , can be computed in O(p4 + t2 · p)
+by applying Theorem B.2 as in the EIG computation.
+6
+
+Bayesian Experimental Design for Shapley Value Estimation
+Table 1. Overview of explanation tasks and games considered in
+the experiments.
+
+for explaining the predictions of GP models on a given
+observation with respect to input features via SVs (Benoumechiara & Elie-Dit-Cosaque, 2019; Chau et al., 2022;
+2023; Mohammadi et al., 2025a;b). In this line of work,
+several definitions of the value function associated with a
+feature subset have been considered, such as removal-based
+formulations that rely on conditional expectations of the
+model output with respect to a distribution over missing
+features. In the GP setting, such value functions can be
+computed efficiently using conditional mean embeddings
+(Chau et al., 2021a;b). In contrast, we focus on using GPs
+as surrogates to directly model the relationship between
+coalitions and an observed value function for arbitrary
+cooperative games.
+
+Task
+
+Model
+
+Dataset
+
+p
+
+#Reps
+
+Feature Importance (FI)
+(Rundel et al., 2024)
+
+TabPFN
+TabPFN
+TabPFN
+
+Diabetes (Reg.) 10
+Diabetes
+8
+Breast Cancer
+8
+
+100
+100
+100
+
+Data Valuation (DV)
+(Ghorbani & Zou, 2019)
+
+RF
+GB
+GB
+
+Bike Sharing
+Bike Sharing
+Cal. Housing
+
+10
+10
+10
+
+30
+30
+30
+
+Chess
+Thyroid
+Jasmine
+
+16
+16
+8
+
+100
+100
+100
+
+60
+79
+101
+14
+9
+16
+
+30
+30
+30
+30
+30
+30
+
+XGBoost
+Hyperparameter Importance (HPI)
+XGBoost
+(Wever et al., 2026)
+LCBench
+
+Local Explanation (LE)
+(Štrumbelj & Kononenko, 2010;
+Bifet et al., 2022)
+
+RF
+CorrGroups60
+RF
+NHANES
+RF
+Crime
+ResNet
+ImageNet
+ViT (9 patches) ImageNet
+ViT (16 patches) ImageNet
+
+5. Experiments
+coalition sampling (GP + Random); b) coalition sampling
+according to leverage scores (GP + Leverage Score Sampling; Musco & Witter, 2025), a state-of-the-art coalition
+sampling strategy in SV estimation; and c) pure uncertainty
+sampling (GP + US; Lewis & Catlett, 1994), as a widely
+used general-purpose baseline in BED (Krause et al., 2008;
+Gunter et al., 2014; Neiswanger et al., 2021) which has also
+been proposed in the context of BayesSHAP (Slack et al.,
+2021). This is done to disentangle the contribution of our
+proposed EIG-based coalition sampling strategy from the
+effect of using a GP surrogate, and to directly compare it to
+alternative coalition selection strategies.
+
+5.1. Experimental Setup
+In the experiments, we run ShaplEIG with the greedy
+BAD algorithm and compare it to popular SV estimation
+methods, as well as relevant baselines from BED and ablations of our method. In particular, we choose an initial
+design of size T0 = p + 1 with coalitions drawn according
+to leverage score sampling (Musco & Witter, 2025). Then,
+at each iteration, we optimize the EIG either exhaustively
+or over at most 1024 candidate coalitions, and refit the GP
+hyperparameters using the newly observed data. We run the
+procedure for a maximum of 512 evaluations, or until all
+coalitions have been evaluated. Note that our experiments
+focus on the low-budget regime, whereas other benchmarks
+typically consider larger evaluation budgets. We provide
+further details on the initial design and GP surrogate in
+Appendices D.1.1 and D.1.2.
+
+Games. We consider several small to moderately large
+games from ML in which the value function is costly to evaluate (see Table 1 for an overview). Specifically, we study a)
+global feature importance (FI) for the TabPFN foundation
+model, which relies on in-context learning (Hollmann et al.,
+2025; Grinsztajn et al., 2025; Rundel et al., 2024); b) dataset
+valuation (DV; Jia et al., 2019; Ghorbani & Zou, 2019; Tay
+et al., 2022) for Random Forests (RFs; Breiman, 2001)
+and Gradient Boosting (GB; Friedman, 2001); c) hyperparameter importance (HPI) according to the HyperSHAP
+ablation game (Wever et al., 2026) for XGBoost (Binder
+et al., 2020) and LCBench (Zimmer et al., 2021); and d)
+local explanation (LE; Štrumbelj & Kononenko, 2010) for
+the computer vision models ViT (Dosovitskiy et al., 2021)
+and ResNet (He et al., 2016), which are further relevant SV
+estimation problems, and for RFs via the linear TreeSHAP
+algorithm (Bifet et al., 2022). While the latter (LE) quantifies the contribution of features to model predictions for
+individual data instances, the former three (FI, DV, HPI)
+quantify the contributions of features, subsets of training
+data, and hyperparameters, respectively, to the predictive
+performance of a learning algorithm on a test set.
+Since FI, DV, and HPI each require full model retrainings for
+coalition evaluations, evaluation budgets are often severely
+
+Estimation Methods. We compare ShaplEIG against
+widely used and recent SV approximation methods. These
+are Kernel SHAP (Lundberg & Lee, 2017), Leverage SHAP
+(Musco & Witter, 2025), permutation sampling (Castro
+et al., 2009), and the state-of-the-art method Regression
+MSR (Witter et al., 2025) coupled with XGBoost. For all of
+the above, we apply paired sampling (Covert & Lee, 2021)
+as an advanced coalition sampling technique. For a fair
+comparison, at each iteration, these competitor methods are
+run using the same budget for value function evaluations as
+ShaplEIG.
+In addition, we evaluate several ablations of our method. In
+all of these, the same GP surrogate type as in ShaplEIG
+is used in the same iterative procedure, including identical
+initial designs and SV extraction from the posterior conditioned on previous evaluations, but the strategies for selecting the coalitions on which the GP is trained differ from our
+EIG-based criterion. In detail, we compare to a) random
+7
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+10−4
+10−5
+10−6
+
+10−5
+
+10−6
+
+10−7
+
+10−7
+0
+
+200
+400
+Evaluations
+
+FI; TabPFN; Diab.
+
+DV; GB; Bike Sharing
+
+−3
+
+10−2
+
+10−5
+10−6
+
+0
+
+10−4
+10−5
+10−6
+
+LE; RF; NHANES
+
+10
+
+−7
+
+100
+
+10−1
+
+10−2
+
+200
+400
+Evaluations
+
+LE; ViT 9; ImageNet
+10−3
+10−4
+10−5
+10−6
+10−7
+
+200
+400
+Evaluations
+
+200
+400
+Evaluations
+
+HPI; LCBench; Jasmine
+
+0
+
+LE; RF; Crime
+
+200
+400
+Evaluations
+
+LE; ViT 16; ImageNet
+10−2
+
+10
+MSE (Mean + SEM)
+
+MSE (Mean + SEM)
+
+MSE (Mean + SEM)
+
+10−7
+
+10−6
+
+0
+
+10−2
+
+10−6
+
+10−5
+
+200
+400
+Evaluations
+
+FI; TabPFN; Breast Cancer DV; GB; Cal. Housing
+10−5
+
+10−5
+
+0
+
+10−8
+0
+
+10−4
+
+10−4
+
+200
+400
+Evaluations
+
+HPI; XGBoost; Thyroid
+
+−7
+
+100
+200
+Evaluations
+
+10−3
+
+10−2
+
+10−3
+
+10
+
+10−3
+
+200
+400
+Evaluations
+
+MSE (Mean + SEM)
+
+10−4
+
+0
+
+MSE (Mean + SEM)
+
+MSE (Mean + SEM)
+
+MSE (Mean + SEM)
+
+10
+
+200
+400
+Evaluations
+
+10−2
+
+10−4
+
+10−3
+10−4
+10−5
+10−6
+
+0
+
+104
+MSE (Mean + SEM)
+
+0
+
+LE; ResNet; ImageNet
+MSE (Mean + SEM)
+
+101
+
+10−3
+
+LE; RF; CorrGroups60
+
+MSE (Mean + SEM)
+
+102
+
+HPI; XGBoost; Chess
+10−4
+
+10−1
+10−2
+10−3
+10
+
+−4
+
+MSE (Mean + SEM)
+
+103
+
+DV; RF; Bike Sharing
+10−2
+
+MSE (Mean + SEM)
+
+MSE (Mean + SEM)
+
+MSE (Mean + SEM)
+
+10
+
+4
+
+MSE (Mean + SEM)
+
+FI; TabPFN; Diab. Reg.
+
+103
+102
+101
+
+10−3
+
+10−4
+
+10−5
+0
+
+100
+200
+Evaluations
+
+0
+
+200
+400
+Evaluations
+
+0
+
+100
+200
+Evaluations
+
+200
+400
+Evaluations
+
+0
+
+200
+400
+Evaluations
+
+Figure 1. Mean squared error (MSE) between estimated and ground-truth Shapley values across all tasks and evaluation budgets, averaged
+over repetitions for ShaplEIG and the SV approximation baselines, with standard error of the mean (SEM) indicated.
+ShaplEIG (Ours)
+
+Regression MSR
+
+Leverage SHAP
+
+limited in these cases. Such budget constraints can also arise
+for repeated model evaluations in LEs, e.g., in the context
+of large foundation models, where each inference may incur
+monetary costs through APIs.
+For our benchmarks, we mostly rely on pre-computed
+games. This avoids the computational cost associated with
+actual value function evaluations and thus allows us to efficiently compare estimation methods and compute groundtruth SVs. Although value function evaluations in the context of LEs for tree-based models are not particularly costly,
+we include these games because linear TreeSHAP enables
+computing ground-truth SVs even in settings with a large
+number of players p where exhaustive enumeration of all
+coalitions is infeasible. We refer to Appendix D.1.3 for
+additional details on the games.
+
+Kernel SHAP
+
+Permutation Sampling
+
+the mean squared error (MSE) between the estimated and
+ground-truth SVs.
+Scalability. For larger games (p > 16), we do not refit the
+GP hyperparameters in every iteration, but only according
+to a refit schedule. In addition to saving the cost of hyperparameter fitting in those iterations, fixed hyperparameters
+enable efficient updates of the EIG between iterations by
+allowing us to reuse intermediate quantities. This substantially reduces the computational overhead for larger games ,
+while retaining outcome-adaptivity at the refitting iterations.
+See Appendix D.1.4 for details.
+Reproducibility. Our implementation is written in Python,
+primarily using BoTorch (Balandat et al., 2020) and
+GPyTorch (Gardner et al., 2018) for GP surrogates and
+EIG computation. For the SV estimation baselines, we
+rely on the shapiq package (Muschalik et al., 2024). The
+repository containing the implementation and all experi-
+
+Evaluation. We compare the different methods with respect to their SV estimation accuracy across varying evaluation budgets. Estimation accuracy is measured using
+8
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+ments is publicly available, ensuring full reproducibility
+(see Appendix D.1.5).
+For statistical robustness and generalizability, we repeat all
+experiments with either 100 or 30 random seeds. The number of seeds depends on the size of the game and the source,
+with the shapiq package only providing 30 repetitions for
+pre-computed games. Generally, the seeds affect the value
+functions of the underlying games (e.g., data splits and training behavior for model retrainings), the SV approximation
+baselines, as well as the initial designs and GP hyperparameter optimization procedures used in adaptive methods.
+We again refer to Table 1 and Appendix D.1.3 for further
+details.
+
+coalition sampling, as a recent state-of-the-art approach
+from SV estimation, can sometimes come close to the performance of ShaplEIG when coupled with a GP, it is still
+consistently outperformed by our method.
+Altogether, this indicates that the strong performance of
+our approach can only partially be attributed to the use of
+a GP surrogate, but is instead substantially driven by our
+principled EIG-based selection strategy. Note, however, that
+for the large LE games, our approach is outperformed by a
+small margin in very early stages, i.e., during the first 100
+iterations, after which it starts to outperform the ablation
+variants.
+Computational Cost. We also analyze the computational
+cost of ShaplEIG. In Appendix D.2.2, we present detailed
+results for the runtime overhead due to GP hyperparameter fitting (Figure 5) and EIG computation (Figure 6). For
+smaller games with up to 16 players, the overhead for hyperparameter refitting can reach up to about 2 minutes per
+iteration, while EIG computation always takes less than a
+second. For larger games with up to 100 players, the overhead for hyperparameter refitting reaches up to about 25
+minutes per iteration, while the overhead for EIG computation remains below 30 seconds.
+This indicates the following: 1) For smaller games the overhead is relatively low (seconds to minutes per iteration),
+enabling the efficient application of ShaplEIG even when
+value functions are not particularly costly; for larger games
+with up to 100 players, however, the overhead grows disproportionately and can be substantial (minutes to hours
+per iteration), rendering ShaplEIG only appropriate when
+value functions are genuinely expensive. 2) Hyperparameter training dominates the computational overhead by a
+large margin. Consequently, alternative GP surrogate-based
+approaches that do not rely on EIG, as considered in the
+ablation study, yield similar overhead and are therefore not
+more efficient than our method.
+
+5.2. Results
+The results for ShaplEIG and the SV approximation baselines across all tasks are presented in Figure 1. The x-axis
+reports the number of value function evaluations while the
+y-axis shows the MSE averaged over repetitions and plotted
+on a logarithmic scale. Error bars indicate the standard error
+of the mean (SEM).
+Across all tasks, our proposed approach ShaplEIG consistently achieves the best overall accuracy and is at least
+as good as all competitors except over very short intervals.
+In the majority of tasks, it strictly dominates all established
+competitors from SV approximation across all evaluation
+budgets, while in the remaining games it is only outperformed by a competitor over short intervals and never by
+a substantial margin. In particular, Regression MSR is the
+only method that sometimes achieves competitive performance, while all other competitors are substantially outperformed by ShaplEIG in most settings. However, for
+several tasks, ShaplEIG outperforms all competitors - including Regression MSR - by a large margin across all
+phases, thus demonstrating enhanced sample efficiency in
+the low-budget regime. We also note that even for the larger
+tasks, where GP hyperparameters are refit only according to
+a fixed schedule, ShaplEIG remains effective. This indicates that simple strategies for reducing the computational
+overhead are sufficient to retain the benefits of our method
+also in larger games.
+
+6. Conclusion
+In this work, we demonstrated that adaptive BED with GP
+surrogates can substantially improve sample efficiency for
+SV estimation in costly games with budget constraints. Central to our approach is the observation that, for SVs, the
+EIG admits a closed-form expression and can be computed
+efficiently.
+At the same time, the proposed method incurs computational
+overhead from repeated GP hyperparameter optimization
+and EIG maximization. Future work should therefore focus on additional computational improvements to further
+broaden the scope of ShaplEIG to games with even more
+players, to games requiring larger value function evaluation
+budgets, and to settings with less costly value functions.
+
+Ablations. Here we summarize the overall findings regarding the ablations of our method. See Appendix D.2.1
+(Figure 3) for the complete results across all tasks.
+ShaplEIG again achieves the best overall performance
+when compared to all (quite strong) GP-based baselines.
+While it frequently outperforms the variants with random
+and US-based coalition selection by a large margin, US
+often performs even worse than random sampling. This
+suggests that, despite being a popular approach from BED,
+US is not particularly effective for SV estimation compared
+to our approach. Moreover, although leverage score-based
+9
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+Acknowledgements
+
+with application to global seismic inversion. SIAM Journal on Scientific Computing, 35(6):A2494–A2523, 2013.
+
+Maximilian Muschalik acknowledges funding by the
+Deutsche Forschungsgemeinschaft (DFG, German Research
+Foundation): TRR 318/3 2026 – 438445824.
+
+Buitinck, L., Louppe, G., Blondel, M., Pedregosa, F.,
+Mueller, A., Grisel, O., Niculae, V., Prettenhofer, P.,
+Gramfort, A., Grobler, J., Layton, R., VanderPlas, J.,
+Joly, A., Holt, B., and Varoquaux, G. API design for machine learning software: experiences from the scikit-learn
+project. In ECML PKDD Workshop: Languages for Data
+Mining and Machine Learning, pp. 108–122, 2013.
+
+Impact Statement
+This paper presents work whose goal is to advance the field
+of Machine Learning. There are many potential societal
+consequences of our work, none which we feel must be
+specifically highlighted here.
+
+Burgess, M. A. and Chapman, A. C. Approximating the
+Shapley value using stratified empirical Bernstein sampling. In IJCAI, pp. 73–81, 2021.
+
+References
+Alexanderian, A., Gloor, P. J., and Ghattas, O. On Bayesian
+A-and D-optimal experimental designs in infinite dimensions. Bayesian Analysis, 11(3):671–695, 2016.
+
+Byrd, R. H., Lu, P., Nocedal, J., and Zhu, C. A limited
+memory algorithm for bound constrained optimization.
+SIAM Journal on scientific computing, 16(5):1190–1208,
+1995.
+
+Attia, A., Alexanderian, A., and Saibaba, A. K. Goaloriented optimal design of experiments for large-scale
+Bayesian linear inverse problems. Inverse Problems, 34
+(9):095009, 2018.
+
+Castro, J., Gómez, D., and Tejada, J. Polynomial calculation
+of the Shapley value based on sampling. Computers &
+Operations Research, 36(5):1726–1730, 2009.
+Chaloner, K. and Verdinelli, I. Bayesian experimental design: A review. Statistical science, pp. 273–304, 1995.
+
+Balandat, M., Karrer, B., Jiang, D. R., Daulton, S., Letham,
+B., Wilson, A. G., and Bakshy, E. BoTorch: A framework for efficient Monte-Carlo Bayesian optimization. In
+Advances in Neural Information Processing Systems 33,
+2020.
+
+Charalambides, C. A. Enumerative combinatorics. Chapman and Hall/CRC, 2018.
+Chau, S. L., Bouabid, S., and Sejdinovic, D. Deconditional
+downscaling with Gaussian processes. Advances in Neural Information Processing Systems, 34:17813–17825,
+2021a.
+
+Benoumechiara, N. and Elie-Dit-Cosaque, K. Shapley effects for sensitivity analysis with dependent inputs: bootstrap and kriging-based algorithms. ESAIM: Proceedings
+and Surveys, 65:266–293, 2019.
+Bifet, A., Read, J., Xu, C., et al. Linear tree SHAP. Advances in Neural Information Processing Systems, 35:
+25818–25828, 2022.
+
+Chau, S. L., Ton, J.-F., González, J., Teh, Y., and Sejdinovic,
+D. Bayesimp: Uncertainty quantification for causal data
+fusion. Advances in Neural Information Processing Systems, 34:3466–3477, 2021b.
+
+Binder, M., Pfisterer, F., and Bischl, B. Collecting empirical
+data about hyperparameters for data driven AutoML. In
+7th ICML Workshop on Automated Machine Learning,
+2020.
+
+Chau, S. L., Hu, R., Gonzalez, J., and Sejdinovic, D. RKHSSHAP: Shapley values for kernel methods. Advances
+in Neural Information Processing Systems, 35:13050–
+13063, 2022.
+
+Bischl, B., Casalicchio, G., Das, T., Feurer, M., Fischer, S.,
+Gijsbers, P., Mukherjee, S., Müller, A. C., Németh, L.,
+Oala, L., Purucker, L., Ravi, S., van Rijn, J. N., Singh, P.,
+Vanschoren, J., van der Velde, J., and Wever, M. OpenML:
+Insights from 10 years and more than a thousand papers.
+Patterns, 6(7):101317, 2025.
+
+Chau, S. L., Muandet, K., and Sejdinovic, D. Explaining
+the uncertain: Stochastic Shapley values for Gaussian
+process models. In Oh, A., Naumann, T., Globerson, A.,
+Saenko, K., Hardt, M., and Levine, S. (eds.), Advances in
+Neural Information Processing Systems, volume 36, pp.
+50769–50795. Curran Associates, Inc., 2023.
+
+Breiman, L. Random forests. Machine learning, 45(1):
+5–32, 2001.
+
+Chen, H., Covert, I. C., Lundberg, S. M., and Lee, S.-I.
+Algorithms to estimate Shapley value feature attributions.
+Nature Machine Intelligence, 5(6):590–601, 2023.
+
+Bui-Thanh, T., Ghattas, O., Martin, J., and Stadler, G.
+A computational framework for infinite-dimensional
+Bayesian inverse problems part I: The linearized case,
+
+Chen, T. and Guestrin, C. XGBoost: A scalable tree boosting system. In Proceedings of the 22nd ACM SIGKDD
+10
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+Frye, C., de Mijolla, D., Begley, T., Cowton, L., Stanley, M.,
+and Feige, I. Shapley explainability on the data manifold.
+In International Conference on Learning Representations,
+2021.
+
+International Conference on Knowledge Discovery and
+Data Mining (KDD), pp. 785–794. ACM, 2016.
+Cheng, Y. and Shen, Y. Bayesian adaptive designs for
+clinical trials. Biometrika, 92(3):633–646, 2005.
+
+Fumagalli, F., Muschalik, M., Kolpaczki, P., Hüllermeier,
+E., and Hammer, B. SHAP-IQ: Unified approximation
+of any-order Shapley interactions. Advances in Neural
+Information Processing Systems, 36:11515–11551, 2023.
+
+Covert, I. and Lee, S.-I. Improving KernelSHAP: Practical
+Shapley value estimation via linear regression. In International Conference on Artificial Intelligence and Statistics,
+pp. 3457–3465. PMLR, 2021.
+
+Fumagalli, F., Witter, R. T., and Musco, C. PolySHAP: Extending kernelSHAP with interaction-informed polynomial regression. In The Fourteenth International Conference on Learning Representations, 2026. URL https:
+//openreview.net/forum?id=M19J8UGguq.
+
+Csilléry, K., Blum, M. G., Gaggiotti, O. E., and François, O.
+Approximate Bayesian computation (ABC) in practice.
+Trends in ecology & evolution, 25(7):410–418, 2010.
+Dasgupta, S. and Hsu, D. Hierarchical sampling for active learning. In Proceedings of the 25th international
+conference on Machine learning, pp. 208–215, 2008.
+
+Gal, Y., Islam, R., and Ghahramani, Z. Deep Bayesian active
+learning with image data. In International Conference on
+Machine Learning, pp. 1183–1192. PMLR, 2017.
+
+Deng, J., Dong, W., Socher, R., Li, L.-J., Li, K., and Li, F.-F.
+ImageNet: A large-scale hierarchical image database. In
+2009 IEEE Conference on Computer Vision and Pattern
+Recognition, pp. 248–255, 2009.
+
+Gardner, J. R., Pleiss, G., Bindel, D., Weinberger, K. Q.,
+and Wilson, A. G. GPyTorch: Blackbox matrix-matrix
+Gaussian process inference with GPU acceleration. In Advances in Neural Information Processing Systems, 2018.
+
+Dinh, A., Miertschin, S., Young, A., and Mohanty, S. D. A
+data-driven approach to predicting diabetes and cardiovascular disease with machine learning. BMC medical
+informatics and decision making, 19(1):211, 2019.
+
+Garnett, R. Bayesian Optimization. Cambridge University
+Press, 2023.
+Ghorbani, A. and Zou, J. Data Shapley: Equitable valuation
+of data for machine learning. In International Conference
+on Machine Learning, pp. 2242–2251. PMLR, 2019.
+
+Dosovitskiy, A., Beyer, L., Kolesnikov, A., Weissenborn,
+D., Zhai, X., Unterthiner, T., Dehghani, M., Minderer,
+M., Heigold, G., Gelly, S., Uszkoreit, J., and Houlsby,
+N. An image is worth 16x16 words: Transformers for
+image recognition at scale. In International Conference
+on Learning Representations, 2021.
+
+Goda, T., Hironaka, T., and Iwamoto, T. Multilevel Monte
+Carlo estimation of expected information gains. Stochastic Analysis and Applications, 38(4):581–600, 2020.
+Grinsztajn, L., Flöge, K., Key, O., Birkel, F., Jund, P., Roof,
+B., Jäger, B., Safaric, D., Alessi, S., Hayler, A., et al.
+TabPFN-2.5: Advancing the state of the art in tabular
+foundation models. arXiv:2511.08667, 2025.
+
+Efron, B., Hastie, T., Johnstone, I., and Tibshirani, R. Least
+angle regression. Annals of Statistics (with discussion),
+pp. 407–499, 2004.
+Fanaee-T, H. and Gama, J. Event labeling combining ensemble detectors and background knowledge. Progress in
+Artificial Intelligence, 2(2):113–127, 2014. ISSN 21926360.
+
+Gunter, T., Osborne, M. A., Garnett, R., Hennig, P., and
+Roberts, S. J. Sampling for inference in probabilistic models with fast Bayesian quadrature. Advances in Neural
+Information Processing Systems, 27, 2014.
+
+Farquhar, S., Gal, Y., and Rainforth, T. On statistical
+bias in active learning: How and when to fix it. In
+International Conference on Learning Representations,
+2021. URL https://openreview.net/forum?
+id=JiYq3eqTKY.
+
+Guyon, I., Sun-Hosoya, L., Boullé, M., Escalante, H. J.,
+Escalera, S., Liu, Z., Jajetic, D., Ray, B., Saeed, M.,
+Sebag, M., Statnikov, A., Tu, W.-W., and Viegas, E.
+Analysis of the AutoML challenge series 2015-2018,
+online appendix. In Hutter, F., Kotthoff, L., and Vanschoren, J. (eds.), Automatic Machine Learning: Methods, Systems, Challenges, chapter 10. Springer, 2019.
+URL https://www.automl.org/wp-content/
+uploads/2018/11/appendix.pdf.
+
+Foster, A. E. Variational, Monte Carlo and policy-based
+approaches to Bayesian experimental design. PhD thesis,
+University of Oxford, 2021.
+Friedman, J. H. Greedy function approximation: a gradient
+boosting machine. Annals of statistics, pp. 1189–1232,
+2001.
+
+He, K., Zhang, X., Ren, S., and Sun, J. Deep residual
+learning for image recognition. In 2016 IEEE Conference
+11
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+on Computer Vision and Pattern Recognition (CVPR), pp.
+770–778, 2016.
+
+Kolpaczki, P., Bengs, V., Muschalik, M., and Hüllermeier,
+E. Approximating the Shapley value without marginal
+contributions. In Proceedings of the AAAI conference
+on Artificial Intelligence, volume 38, pp. 13246–13255,
+2024.
+
+Heinrich, F., Kienzle, P. A., Hoogerheide, D. P., and Lösche,
+M. Information gain from isotopic contrast variation
+in neutron reflectometry on protein–membrane complex
+structures. Applied Crystallography, 53(3):800–810,
+2020.
+
+Kossen, J., Farquhar, S., Gal, Y., and Rainforth, T. Active
+testing: Sample-efficient model evaluation. In International Conference on Machine Learning, pp. 5753–5763.
+PMLR, 2021.
+
+Hennig, P. and Schuler, C. J. Entropy search for informationefficient global optimization. Journal of Machine Learning Research, 13(1):1809–1837, 2012.
+
+Kossen, J., Farquhar, S., Gal, Y., and Rainforth, T. Active surrogate estimators: An active learning approach
+to label-efficient model evaluation. Advances in Neural
+Information Processing Systems, 35:24557–24570, 2022.
+
+Hernández-Lobato, J. M., Hoffman, M. W., and Ghahramani, Z. Predictive entropy search for efficient global
+optimization of black-box functions. Advances in Neural
+Information Processing Systems, 27, 2014.
+
+Krause, A., Singh, A., and Guestrin, C. Near-optimal sensor placements in Gaussian processes: Theory, efficient
+algorithms and empirical studies. Journal of Machine
+Learning Research, 9(2), 2008.
+
+Hollmann, N., Müller, S., Purucker, L., Krishnakumar, A.,
+Körfer, M., Hoo, S. B., Schirrmeister, R. T., and Hutter,
+F. Accurate predictions on small data with a tabular
+foundation model. Nature, 01 2025.
+
+Kwon, Y. and Zou, J. Beta Shapley: a unified and noisereduced data valuation framework for machine learning.
+In International Conference on Artificial Intelligence and
+Statistics, pp. 8780–8802. PMLR, 2022.
+
+Houlsby, N., Huszár, F., Ghahramani, Z., and Lengyel, M.
+Bayesian active learning for classification and preference
+learning. arXiv:1112.5745, 2011.
+
+Larkin, F. Gaussian measure in Hilbert space and applications in numerical analysis. The Rocky Mountain Journal
+of Mathematics, pp. 379–421, 1972.
+
+Huan, X., Jagalur, J., and Marzouk, Y. Optimal experimental
+design: Formulations and computations. Acta Numerica,
+33:715–840, 2024.
+
+Lewis, D. D. and Catlett, J. Heterogeneous uncertainty
+sampling for supervised learning. In Machine learning
+proceedings 1994, pp. 148–156. Elsevier, 1994.
+
+Hübotter, J., Sukhija, B., Treven, L., As, Y., and Krause,
+A. Transductive active learning: Theory and applications.
+Advances in Neural Information Processing Systems, 37:
+124686–124755, 2024.
+
+Lewis, D. D. and Gale, W. A. A sequential algorithm for
+training text classifiers. In Proceedings of the 17th Annual
+International ACM SIGIR Conference on Research and
+Development in Information Retrieval, SIGIR ’94, pp.
+3–12, Berlin, Heidelberg, 1994. Springer-Verlag. ISBN
+038719889X.
+
+Huszár, F. and Duvenaud, D. Optimally-weighted herding
+is Bayesian quadrature. In Proceedings of the TwentyEighth Conference on Uncertainty in Artificial Intelligence, pp. 377–386, 2012.
+
+Lieberman, C. and Willcox, K. Goal-oriented inference:
+Approach, linear theory, and application to advection
+diffusion. siam REVIEW, 55(3):493–519, 2013.
+
+Hutter, F. Automated configuration of algorithms for solving
+hard computational problems. PhD thesis, University of
+British Columbia, 2009. Chapter 12.
+
+Lindley, D. V. On a measure of the information provided by
+an experiment. The Annals of Mathematical Statistics, 27
+(4):986–1005, 1956.
+
+Jia, R., Dao, D., Wang, B., Hubis, F. A., Hynes, N., Gürel,
+N. M., Li, B., Zhang, C., Song, D., and Spanos, C. J.
+Towards efficient data valuation based on the Shapley
+value. In Proceedings of the International Conference
+on Artificial Intelligence and Statistics (AISTATS), pp.
+1167–1176, 2019.
+
+Lindley, D. V. Bayesian statistics: A review. SIAM, 1972.
+Lundberg, S. M. and Lee, S.-I. A unified approach to interpreting model predictions. Advances in Neural Information Processing Systems, 30, 2017.
+Lundberg, S. M., Erion, G., Chen, H., DeGrave, A., Prutkin,
+J. M., Nair, B., Katz, R., Himmelfarb, J., Bansal, N.,
+and Lee, S.-I. From local explanations to global understanding with explainable AI for trees. Nature machine
+intelligence, 2(1):56–67, 2020.
+
+Jones, D. R., Schonlau, M., and Welch, W. J. Efficient
+global optimization of expensive black-box functions.
+Journal of Global Optimization, 13(4):455–492, 1998.
+ISSN 1573-2916.
+12
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+Macdonald, I. G. Symmetric functions and Hall polynomials.
+Oxford university press, 1998.
+
+Pfisterer, F., Schneider, L., Moosbauer, J., Binder, M., and
+Bischl, B. YAHPO Gym - an efficient multi-objective
+multi-fidelity benchmark for hyperparameter optimization. In Guyon, I., Lindauer, M., van der Schaar, M.,
+Hutter, F., and Garnett, R. (eds.), Proceedings of the First
+International Conference on Automated Machine Learning, volume 188 of Proceedings of Machine Learning
+Research, pp. 3/1–39. PMLR, 25–27 Jul 2022.
+
+MacKay, D. J. Information-based objective functions for
+active data selection. Neural computation, 4(4):590–604,
+1992.
+Mitchell, R., Cooper, J., Frank, E., and Holmes, G. Sampling permutations for Shapley value estimation. Journal
+of Machine Learning Research, 23(43):1–46, 2022.
+
+Platt, J., Burges, C. J., Swenson, S., Weare, C., and Zheng,
+A. Learning a Gaussian process prior for automatically
+generating music playlists. Advances in Neural Information Processing Systems, 14, 2001.
+
+Mohammadi, M., Chau, S. L., and Muandet, K. Computing
+exact Shapley values in polynomial time for productkernel methods. arXiv:2505.16516, 2025a.
+
+Qian, P. Z. G., Wu, H., and Wu, C. J. Gaussian process models for computer experiments with qualitative and quantitative factors. Technometrics, 50(3):383–396, 2008.
+
+Mohammadi, M., Muandet, K., Tiddi, I., Teije, A. T., and
+Chau, S. L. Exact Shapley attributions in quadratic-time
+for fanova Gaussian processes. arXiv:2508.14499, 2025b.
+
+Quinlan, R. Thyroid Disease. UCI Machine Learning
+Repository, 1986.
+
+Muschalik, M., Baniecki, H., Fumagalli, F., Kolpaczki, P.,
+Hammer, B., and Hüllermeier, E. shapiq: Shapley interactions for machine learning. In The Thirty-eight Conference on Neural Information Processing Systems Datasets
+and Benchmarks Track, 2024.
+
+Rainforth, T., Foster, A., Ivanova, D. R., and Bickford Smith,
+F. Modern Bayesian experimental design. Statistical
+Science, 39(1):100–114, 2024.
+Rasmussen, C. E. and Ghahramani, Z. Bayesian Monte
+Carlo. Advances in Neural Information Processing Systems, pp. 505–512, 2003.
+
+Musco, C. and Witter, R. T. Provably accurate Shapley value
+estimation via leverage score sampling. In The Thirteenth
+International Conference on Learning Representations,
+2025.
+
+Redmond, M. Communities and crime unnormalized data
+set. UCI Machine Learning Repository, pp. 66, 2011.
+
+Neiswanger, W., Wang, K. A., and Ermon, S. Bayesian
+algorithm execution: Estimating computable properties
+of black-box functions using mutual information. In
+International Conference on Machine Learning, pp. 8005–
+8015. PMLR, 2021.
+
+Rozemberczki, B., Watson, L., Bayer, P., Yang, H.-T., Kiss,
+O., Nilsson, S., and Sarkar, R. The Shapley value in
+machine learning. In The 31st International Joint Conference on Artificial Intelligence and the 25th European
+Conference on Artificial Intelligence, pp. 5572–5579. International Joint Conferences on Artificial Intelligence
+Organization, 2022.
+
+Nguyen, K. T. N., Sim, R. H. L., Nguyen, Q. P., Ng, S.-K.,
+and Low, B. K. H. Dupre: Data utility prediction for efficient data valuation. In Proceedings of the 24th International Conference on Autonomous Agents and Multiagent
+Systems, pp. 1557–1565, 2025.
+
+Rundel, D., Kobialka, J., von Crailsheim, C., Feurer, M.,
+Nagler, T., and Rügamer, D. Interpretable machine learning for TabPFN. In World Conference on Explainable
+Artificial Intelligence, pp. 465–476. Springer, 2024.
+
+O’Hagan, A. Bayes–hermite quadrature. Journal of statistical planning and inference, 29(3):245–260, 1991.
+
+Ryan, E. G., Drovandi, C. C., McGree, J. M., and Pettitt,
+A. N. A review of modern computational algorithms for
+Bayesian optimal design. International Statistical Review,
+84(1):128–154, 2016.
+
+Owen, A. B. Sobol’ indices and Shapley value. SIAM/ASA
+Journal on Uncertainty Quantification, 2(1):245–251,
+2014.
+Pace, R. K. and Barry, R. Sparse spatial autoregressions.
+Statistics and Probability Letters, 33:291–297, 1997.
+
+Santner, T. J., Williams, B. J., and Notz, W. I. The Design
+and Analysis of Computer Experiments. Springer Series
+in Statistics. Springer New York, NY, 2 edition, 2018.
+ISBN 978-1-4939-8847-1.
+
+Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V.,
+Thirion, B., Grisel, O., Blondel, M., Prettenhofer, P.,
+Weiss, R., Dubourg, V., Vanderplas, J., Passos, A., Cournapeau, D., Brucher, M., Perrot, M., and Duchesnay, E.
+Scikit-learn: Machine learning in Python. Journal of
+Machine Learning Research, 12:2825–2830, 2011.
+
+Sebastiani, P. and Wynn, H. P. Maximum entropy sampling
+and optimal Bayesian experimental design. Journal of the
+Royal Statistical Society: Series B (Statistical Methodology), 62(1):145–157, 2000.
+13
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+Settles, B. Active learning literature survey. Computer
+Sciences Technical Report 1648, University of Wisconsin–
+Madison, 2009.
+
+Williams, C. and Rasmussen, C. Gaussian processes for
+regression. Advances in Neural Information Processing
+Systems, 8, 1995.
+
+Shapiro, A. Chess (King-Rook vs. King-Pawn). UCI Machine Learning Repository, 1983.
+
+Williams, C. K. and Rasmussen, C. E. Gaussian processes
+for machine learning. MIT press Cambridge, MA, 2006.
+
+Shapley, L. S. et al. A value for n-person games. 1953.
+
+Witter, R. T., Liu, Y., and Musco, C. Regression-adjusted
+Monte Carlo estimators for Shapley values and probabilistic values. In The Thirty-ninth Annual Conference on
+Neural Information Processing Systems, 2025.
+
+Slack, D., Hilgard, A., Singh, S., and Lakkaraju, H. Reliable post hoc explanations: Modeling uncertainty in
+explainability. Advances in Neural Information Processing Systems, 34:9391–9404, 2021.
+
+Wolberg, W. H. and Mangasarian, O. L. Multisurface
+method of pattern separation for medical diagnosis applied to breast cytology. Proceedings of the National
+Academy of Sciences, 87(23):9193–9196, 1990.
+
+Smith, F. B., Kirsch, A., Farquhar, S., Gal, Y., Foster, A.,
+and Rainforth, T. Prediction-oriented Bayesian active
+learning. In International Conference on Artificial Intelligence and Statistics, pp. 7331–7348. PMLR, 2023.
+
+Yu, K., Bi, J., and Tresp, V. Active learning via transductive
+experimental design. In Proceedings of the 23rd international conference on Machine learning, pp. 1081–1088,
+2006.
+
+Smith, J. W., Everhart, J. E., Dickson, W. C., Knowler,
+W. C., and & Johannes, R. S. Using the adap learning
+algorithm to forecast the onset of diabetes mellitus. In
+Proceedings of the Symposium on Computer Applications
+and Medical Care, pp. 261–265. IEEE Computer Society
+Press., 1988.
+
+Zhong, S., Shen, W., Catanach, T., and Huan, X. Goaloriented Bayesian optimal experimental design for nonlinear models using Markov chain Monte Carlo. SIAM/ASA
+Journal on Uncertainty Quantification, 14(1):19–47,
+2026.
+
+Spantini, A., Cui, T., Willcox, K., Tenorio, L., and Marzouk,
+Y. Goal-oriented optimal approximations of Bayesian
+linear inverse problems. SIAM Journal on Scientific Computing, 39(5):S167–S196, 2017.
+
+Zimmer, L., Lindauer, M., and Hutter, F. Auto-pytorch:
+Multi-fidelity metalearning for efficient and robust autodl. IEEE transactions on pattern analysis and machine
+intelligence, 43(9):3079–3090, 2021.
+
+Stein, M. L. Interpolation of spatial data: some theory for
+kriging. Springer Science & Business Media, 1999.
+Štrumbelj, E. and Kononenko, I. An efficient explanation
+of individual classifications using game theory. Journal
+of Machine Learning Research, 11(1):1–18, 2010.
+Tay, S. S., Xu, X., Foo, C. S., and Low, B. K. H. Incentivizing collaboration in machine learning via synthetic
+data rewards. In Proceeedings of the AAAI Conference
+on Artificial Intelligence (AAAI), pp. 9448–9456, 2022.
+van Es, A. J. and Helmers, R. Elementary symmetric polynomials of increasing order. Probability theory and related
+fields, 80(1):21–35, 1988.
+Wang, J. T. and Jia, R. Data Banzhaf: A robust data valuation framework for machine learning. In International
+Conference on Artificial Intelligence and Statistics, pp.
+6388–6421. PMLR, 2023.
+Wever, M., Muschalik, M., Fumagalli, F., and Lindauer, M.
+HyperSHAP: Shapley values and interactions for explaining hyperparameter optimization. In Proceedings of the
+AAAI Conference on Artificial Intelligence, volume 40,
+pp. 26867–26875, 2026.
+14
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+A. Background
+A.1. Gaussian Processes
+A Gaussian Process (GP; Williams & Rasmussen, 1995; 2006) is fully characterized by a mean function m : X → R and
+a positive definite kernel kξ : X × X → R, parameterized by hyperparameters ξ. Formally, we write f ∼ GP(m, kξ ).
+Given noisy training data Dn := (X(n) , Y(n) ), where X(n) ∈ Rn×p and Y(n) ∈ Rn , with the targets Y(n) corrupted by
+homoscedastic, additive Gaussian noise ϵ ∼ N (0, σϵ2 ) that is i.i.d. across evaluations, updating the prior yields a posterior
+process that is also a GP. The posterior predictive distribution (PPD) over unseen test data X∗ ∈ Rs×p is a multivariate
+Gaussian
+
+f (X∗ ) | Dn ∼ Ns µf (X∗ )|Dn , Σf (X∗ )|Dn .
+(7)
+For a zero mean function m = 0, this leads to the mean prediction
+
+−1
+µf (X∗ )|Dn = Kξ (X∗ , X(n) ) Kξ (X(n) , X(n) ) + σϵ2 I Y(n)
+
+(8)
+
+
+−1
+Σf (X∗ )|Dn = Kξ (X∗ , X∗ ) − Kξ (X∗ , X(n) ) Kξ (X(n) , X(n) ) + σϵ2 I Kξ (X(n) , X∗ ) ∈ Rs×s .
+
+(9)
+
+and covariance matrix
+
+Here, Kξ (A, B) ∈ Ra×b denotes the kernel matrix with entries Kξ (A, B)(i,j) = kξ (A(i,·) , B(j,·) ) for data A ∈ Ra×p and
+B ∈ Rb×p .
+Computational Cost. For the computation of the posterior predictive covariance Σf (X∗ )|Dn over X∗ , the kernel matrix of
+the training data, Kξ (X(n) , X(n) ) ∈ Rn×n , is typically first decomposed via a Cholesky factorization, where the associated
+computational cost scales as O(n3 ). The second term of Equation 9 can then be computed by solving a linear system with
+multiple right-hand sides, which scales as O(s · n2 ), followed by a matrix product that scales as O(s2 · n). Altogether, the
+total computational cost scales as O(n3 + s · n2 + s2 · n). When only the marginal posterior predictive variances are of
+interest, corresponding to the diagonal of Σf (X∗ )|Dn , the computational cost reduces to O(n3 + s · n2 ).
+Covariance Functions. A popular covariance function for categorical input variables is the Hamming kernel (Platt et al.,
+2001; Qian et al., 2008; Hutter, 2009). It quantifies the similarity of two data points as
+kξ (x, x′ ) =
+
+=
+
+p
+Y
+
+kξ,j (x, x′ )
+
+j=1
+p
+Y
+
+ [xj ̸= x′ ] 
+j
+exp −
+,
+2
+ℓ
+j
+j=1
+
+where ξ = (ℓ1 , . . . , ℓp )⊤ ∈ Rp collects the dimension-specific lengthscales. Note that this is a product kernel, meaning that
+the kernel value factorizes over dimensions.
+Hyperparameter Training. The kernel hyperparameters ξ (and potentially the noise variance σϵ2 ) influence the approximation quality of GP models, yet are unknown in practice. Thus, they are typically learned by maximizing the log marginal
+likelihood (LML) of the training data Dn , or alternatively by maximum a posteriori (MAP) estimation. This optimization
+balances data fit and model complexity and is usually carried out using gradient-based methods, exploiting the closed-form
+expression of the marginal likelihood and its derivatives with respect to the hyperparameters.
+(Quasi-) Noiseless GPs. A noiseless GP is obtained as the limiting case of the above model when the observation noise
+variance is fixed to zero, i.e., σϵ2 = 0. In this case, assuming that the kernel matrix is non-singular, the posterior mean
+interpolates the observed training data exactly (interpolation property; Stein, 1999; Williams & Rasmussen, 2006). In
+practice, however, one typically uses a quasi-noiseless GP, where σϵ2 is fixed to a very small positive constant for numerical
+stability.
+
+15
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+B. Methodology
+B.1. Shapley Value Estimation
+In the following, we discuss further methodological details on the SV estimation approach of ShaplEIG.
+Interpolation Property. We propose extracting SV estimates in ShaplEIG via ϕ̂ := µϕ|Dt using a noiseless GP
+surrogate. It is important to note that one could alternatively employ a noisy GP in this context. This may lead to better
+generalization performance, depending on the noise level of the value function. However, in our experiments, we use
+quasi-noiseless GPs, which is motivated by the following considerations: First, as explained in the main paper (Section 3.2),
+the SV estimator is consistent when using a noiseless GP. Second, we assume deterministic games, making noiseless GPs a
+natural choice. Third, in the presented experiments (Section 5), ShaplEIG achieves state-of-the-art performance in SV
+estimation on real-world datasets, which may well be noisy. This suggests that the chosen approach is effective in practice.
+Consequently, we leave the analysis of noisy GPs for future work. Nevertheless, we emphasize that noisy GPs may be
+necessary in some cases and that our current approach has limitations in certain settings.
+Estimator Bias and Debiasing. We note that the proposed SV estimator, despite being consistent, is not unbiased
+(MacKay, 1992; Dasgupta & Hsu, 2008; Kossen et al., 2021). This is because the adaptive coalition selection based on the
+EIG breaks the assumption of independent sampling. However, for adaptive surrogate-based estimators, unbiasedness is
+typically not the central objective. More generally, in SV estimation, it is common to accept some bias in exchange for
+lower variance, and thus a reduced MSE of the estimator (as in Kernel SHAP; see the analyses of Covert & Lee (2021) and
+Kolpaczki et al. (2024) for further details).
+Furthermore, note that there exist approaches for debiasing the SV estimator with slight changes to the acquisition strategy.
+In particular, ShaplEIG can be viewed as a special instance of active testing (Kossen et al., 2021; 2022), where the SVs
+correspond to expectations to be estimated in a sample-efficient way. Farquhar et al. (2021) showed that by (1) sampling
+coalitions according to an acquisition distribution that can be derived from the EIG scores, rather than selecting the EIG
+maximizer, and (2) adjusting the SV estimator with importance weights in the Levelled Unbiased Risk Estimator (LURE;
+Farquhar et al., 2021), the bias from active selection can be corrected. We leave such unbiased, importance-weighted variants
+for future work.
+
+16
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+B.2. Practical Implications of the EIG-based Coalition Selection
+In the following, we provide a detailed discussion of how the covariance-based EIG criterion affects coalition selection in
+practice, and when it can be expected to provide benefits over alternative selection strategies (Section B.2.1). In addition, we
+present two examples of games and the behavior of different selection strategies to further illustrate these concepts (Section
+B.2.2).
+B.2.1. D ISCUSSION OF THE EIG- BASED C OALITION S ELECTION
+As indicated by Equation 5, the EIG about the SVs is maximized by the coalition that leads to the lowest determinant of the
+SV posterior covariance after the associated evaluation is added to the dataset. In particular, this is governed by the expected
+reduction in uncertainty about the value function across all coalitions, and how this reduction propagates to the SVs through
+the linear transformation defined by A (see Equation 4). The GP surrogate from ShaplEIG is able to capture this through
+its Hamming covariance function. It quantifies similarity between coalition pairs based on which players the two coalitions
+share, weighted by learnable lengthscale parameters that determine how strongly disagreements for specific players reduce
+covariance. As a result, two coalition pairs with the same Hamming distance (i.e., the same number of players on which they
+disagree) can still have very different covariance if they differ in players that are more or less influential under the surrogate.
+Overall, this induces a posterior covariance structure over the coalitions, through which evaluating one coalition not only
+reduces uncertainty locally at that coalition itself, but also globally at others. Based on this, the EIG favors coalitions that
+are able to reduce uncertainty jointly about the SVs, as indicated by this covariance structure, while accounting for the
+coalitions already observed.
+This stands in contrast to current state-of-the-art approaches for coalition sampling (e.g., leverage score sampling; Musco
+& Witter, 2025), which sample coalitions from fixed distributions. Although these distributions typically depend on the
+size of candidate coalitions, they treat all player differences equally and do not distinguish between different coalitions of
+the same size. Even uncertainty sampling (US; Lewis & Catlett, 1994), a widely used general-purpose baseline in BED
+settings (Krause et al., 2008; Gunter et al., 2014; Neiswanger et al., 2021) that does distinguish between coalitions of the
+same size, does not fully capture this effect either. US selects the coalition with the highest marginal posterior variance
+under the surrogate, but ignores how its evaluation informs other coalitions.
+This also clarifies the regime in which we expect the strategy to be advantageous: asymmetric games, where players have
+different influence on the value function - e.g., some are highly relevant while others have negligible effect - with interactions
+occurring primarily among the relevant players. We believe this regime is common in practice, particularly in large games,
+where it is unlikely that all players contribute symmetrically to the value function.
+B.2.2. I LLUSTRATIVE E XAMPLES
+We consider two simple games with three players (P := {1, 2, 3}) and the initial design
+
+
+
+
+
+DT0 +1 = { ∅, ν(∅) , {1}, ν({1}) , {2}, ν({2}) , {3}, ν({3}) , {1, 2, 3}, ν({1, 2, 3}) },
+containing the empty and full coalitions as well as all size-one coalitions. As the candidate set, we consider all size-two
+coalitions, i.e.,
+C = {{1, 2}, {1, 3}, {2, 3}}.
+Symmetric Games.
+
+First, consider the symmetric value function
+νsym (S) = |S|2 ,
+
+which contains interactions among players but is identical across all coalitions of the same size. The initial design evaluates
+to
+DT0 +1,sym = {(∅, 0), ({1}, 1), ({2}, 1), ({3}, 1), ({1, 2, 3}, 9)}.
+Since all single-player coalitions yield the same value, GP fitting in the initial ShaplEIG iteration produces identical
+lengthscales for all players, i.e., ℓ = (1.035, 1.035, 1.035)⊤ . As a result, the covariances among all unseen candidates are
+identical: kξ ({1, 2}, {1, 3}) = kξ ({1, 2}, {2, 3}) = kξ ({1, 3}, {2, 3}). Each pair of candidate coalitions shares exactly
+17
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+(a) Symmetric Game
+
+(b) Asymmetric Game
+
+Figure 2. Illustration of the behavior of EIG-based coalition selection given the initial design DT0 +1 in symmetric and asymmetric games.
+The line width of the colored edges represents the magnitude of the covariance between coalition pairs according to the GP surrogate,
+while the size of the colored nodes represents the EIG scores of the candidate coalitions.
+
+one player, and due to identical lengthscales, differences in player membership do not affect the covariance differently
+across remaining players. Consequently, the EIG is also identical across all candidates, i.e., EIG({1, 2}) = EIG({1, 3}) =
+EIG({2, 3}). See Figure 2a for an illustration of the covariance structure and EIG in this setting.
+Thus, in this setting, EIG provides no advantage over coalition sampling methods that depend solely on coalition size and
+are commonly used in classical SV estimation.
+Asymmetric Games.
+
+We now consider an asymmetric game with value function
+νasym (S) = 1 · [1 ∈ S] + 1 · [2 ∈ S] + 0.01 · [3 ∈ S] + 1 · [{1, 2} ⊆ S].
+
+Players 1 and 2 have identical main effects, player 3 is negligible, and there is an interaction between players 1 and 2.
+Given the initial design
+DT0 +1,asym = {(∅, 0), ({1}, 1), ({2}, 1), ({3}, 0.01), ({1, 2, 3}, 3.01)},
+the fitted GP hyperparameters ℓ = (0.807, 0.807, 3.918)⊤ already reflect the low relevance of player 3. Consequently, the
+coalition containing the two relevant players, {1, 2}, exhibits higher covariance with the other candidates than the other
+size-two coalitions:
+kξ ({1, 2}, {1, 3}) = kξ ({1, 2}, {2, 3}) > kξ ({1, 3}, {2, 3}).
+This arises because players 1 and 2 have smaller lengthscales, so sharing one of them reduces variability more. Coalitions
+sharing only player 3 leave the relevant players in disagreement and therefore have lower covariance. This is directly
+reflected in Qi,i (Equation 12), which depends on these covariances, and as a result the EIG is maximized for this coalition:
+EIG({1, 2}) > EIG({1, 3}) = EIG({2, 3}). Intuitively, this candidate, due to its highest correlation with the remaining
+coalitions, is expected to yield the largest reduction in uncertainty about the SVs. See Figure 2b for an illustration of the
+covariance structure and EIG in this setting.
+Consequently, ShaplEIG selects {1, 2} for evaluation, revealing the key interaction. This reduces the MSE of the SV
+estimation from 0.024 to 5.485e-06. In contrast, classical size-based coalition samplers choose all three candidates with
+equal probability. As a result, it is more likely that either {1, 3} or {2, 3} is selected, neither of which reveals the relevant
+interaction and therefore leads to a substantially smaller reduction in MSE (from 0.024 to 8.75e-4).
+This example demonstrates that in asymmetric games, where some players are highly relevant to the value function while
+others have negligible effect, and interactions occur primarily among the relevant players, ShaplEIG can exploit this
+18
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+structure to identify informative coalitions. In contrast, classical coalition sampling schemes often fail to do so, as they treat
+all players identically.
+
+19
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+B.3. Closed-form EIG for the Shapley Values
+In the following, we will derive the closed-form expression for the EIG of a candidate coalition about the SVs as presented
+in Formula 6 in Section 3.4 of the main text.
+In Section 3.3, we established that adaptively selecting data for GP surrogate training can be viewed as a Bayesian linear
+inverse problem and that, since the SVs are given by a linear transformation of ν, the EIG admits a closed-form expression.
+Consequently, according to Equation 3 in Section 2.2, the EIG about the SVs ϕ for a candidate coalition z(i) ∈ {0, 1}p at
+iteration t is given by:
+(t)
+
+EIGϕ (z(i) ) = I ϕ; ν ′ (z(i) ) | Dt
+
+
+
+
+∝ − log det AΣ(ν|ν ′ (z(i) ),Dt ) A⊤ + C,
+where C is a constant independent of z(i) , and the posterior covariance can be expressed as
+−2 ⊤
+Σ(ν|ν ′ (z(i) ),Dt ) = Σ−1
+(ν|Dt ) + ei σϵ ei
+
+−1
+
+.
+
+It can be rearranged into the following form, as presented in Formula 6 in Section 3.4 of the main text:
+h 
+ i
+h 
+ i
+(t)
+2
+⊤
+2
+EIGϕ (z(i) ) ∝ C ′ + log e⊤
+i Σ(ν|Dt ) + σϵ I ei − log ei Σ(ν|Dt ) + σϵ I − Q ei ,
+p
+
+p
+
+p
+
+AΣ(ν|Dt ) A⊤
+
+−1
+
+p
+
+where C ′ is constant, I ∈ R2 ×2 is the identity matrix, and Q ∈ R2 ×2 is defined as
+Q = AΣ(ν|Dt )
+
+⊤
+
+
+AΣ(ν|Dt ) .
+
+Specifically, this follows by direct application of Sherman-Morrison:
+−2 ⊤
+A Σ−1
+(ν|Dt ) + ei σϵ ei
+
+−1
+
+A⊤ = AΣ(ν|Dt ) A⊤ − AΣ(ν|Dt ) ei σϵ2 + e⊤
+i Σ(ν|Dt ) ei
+
+−1 ⊤
+ei Σ(ν|Dt ) A⊤ ,
+
+and by the matrix determinant lemma (see, e.g., Williams & Rasmussen (2006) A.3):
+
+
+
+−1 ⊤
+⊤
+det AΣ(ν|ν ′ (z(i) ),Dt ) A⊤ = det AΣ(ν|Dt ) A⊤ − AΣ(ν|Dt ) ei σϵ2 + e⊤
+Σ
+e
+e
+Σ
+A
+i
+(ν|Dt )
+(ν|Dt )
+i
+i
+
+
+
+
+
+−1
+= det AΣ(ν|Dt ) A⊤ · det σϵ2 + e⊤
+i Σ(ν|Dt ) ei
+
+
+
+⊤
+⊤
+⊤ −1
+· det σϵ2 + e⊤
+Σ
+e
+−
+e
+Σ
+A
+AΣ
+A
+AΣ
+e
+.
+i
+i
+(ν|Dt )
+(ν|Dt )
+(ν|Dt )
+(ν|Dt )
+i
+i
+In this final formulation, the first product term does not depend on z(i) , and for the latter two terms, the det operators can be
+dropped, as they operate only on scalars.
+
+20
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+B.4. Efficient EIG Computation
+In the following, we present the proof of Theorem 3.1 and thereby derive an efficient computation scheme for the EIG
+of a single candidate coalition z(i) ∈ {0, 1}p about the SVs ϕ (Formula 6 in Section 3.4). In doing so, we exploit the
+multiplicative structure of the Hamming kernel via a correspondence to elementary symmetric polynomials (ESPs; van Es
+& Helmers, 1988; Macdonald, 1998; Charalambides, 2018). We also show how the EIG can be computed across various
+candidates in a vectorized manner (Subsection B.4.1).
+Specifically, we will first show in Theorem B.1 how the linear term AKξ (Z, z(i) ) ∈ Rp , required for the computation of
+AΣ(ν|Dt ) ei , can be computed in O(p2 ) and in Theorem B.2 how the quadratic term AKξ (Z, Z)A⊤ ∈ Rp×p , required for
+the computation of AΣ(ν|Dt ) A⊤ , can be computed in O(p4 ). Based on these results we will then show in Theorem B.3
+how the complete EIG can be computed efficiently in O(p4 + t3 ), thereby avoiding exponential scaling in p.
+We assume 2p > t > p, which is aligned with our experiments where the initial design is of size T0 = p + 1. Also, we
+assume a Hamming kernel with fixed length scales ξ (see Section A.1):
+kξ (x, x′ ) =
+
+=
+
+p
+Y
+
+ [xj ̸= x′ ] 
+j
+exp −
+2
+ℓ
+j
+j=1
+p
+Y
+
+
+αj [xj = x′j ] + βj [xj ̸= x′j ] ,
+
+(10)
+
+(11)
+
+j=1
+
+where αj = 1 and βj = exp(−ℓ−2
+j ). This rewriting highlights that each multiplicative term can only take on two values,
+depending on whether the arguments are equal in the corresponding dimension.
+Similar techniques for the linear part AKξ (Z, z(i) ) have been considered for the computation of products between Shapley
+weights and a kernel matrix by Mohammadi et al. (2025a), which is currently only available on arXiv. However, their
+approach differs from ours in that it is based on unscaled ESPs, whereas we use scaled ESPs. Furthermore, we are not aware
+of any prior work regarding the quadratic part AKξ (Z, Z)A⊤ . For completeness, we present the full construction for our
+specific setting using a Hamming kernel with length scales.
+
+21
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+Theorem B.1. The term AKξ (Z, z(i) ) ∈ Rp , for a candidate coalition z(i) ∈ {0, 1}p , is efficiently computable in O(p2 )
+time.
+p
+
+Proof. In the following, we will consider the matrix-vector multiplication AKξ (Z, z(i) ) ∈ Rp , where A ∈ Rp×2 and
+p
+Kξ (Z, z(i) ) ∈ R2 . Initially, we will show that the entries can be rewritten as weighted sums of kernel evaluations across
+coalitions with weights according to the Shapley matrix A. We then recognize that the additive kernel evaluations associated
+with certain groups of coalitions share the same weights and show how inner sums of kernel values over these groups can be
+computed more efficiently by identifying them with scaled, univariate ESPs. In detail, we will show how the sums of kernel
+values over all coalitions of size k , all coalitions of size k that contain a certain player j , and all coalitions of size k that do
+not contain a certain player j can be computed efficiently. Lastly, we will combine everything to show how the complete
+term can be computed in O(p2 ) time.
+Rewriting entries of AKξ (Z, z(i) ) as sums of kernel evaluations for coalition groups of identical size. Consider
+AKξ (Z, z(i) ), which computes the SVs of the kernel vector Kξ (Z, z(i) ). The j-th entry of this vector, corresponding to a
+player j ∈ {1, . . . , p}, is given by the following summation over all coalitions:
+X
+
+(AKξ (Z, z(i) ))j =
+
+Aj,S kξ (1S , z(i) ).
+
+S⊆{1,...,p}
+
+Plugging in the definition of the Shapley matrix for the entry corresponding to player j and a coalition S
+!
+/ S]
+1 [j ∈ S] [j ∈
+ − p−1
+Aj,S =
+p−1
+p
+|S|−1
+|S|
+equivalently gives
+(AKξ (Z, z(i) ))j =
+
+1
+p
+
+[j ∈ S]
+(i)
+
+p−1 kξ (1S , z )
+
+X
+
+|S|−1
+
+S⊆{1,...,p}
+
+−
+
+1
+p
+
+[j ∈
+/ S]
+(i)
+
+p−1 kξ (1S , z ).
+
+X
+
+|S|
+
+S⊆{1,...,p}
+
+Note that the weights according to the Shapley matrix A, besides the total amount of players p, depend only on the size of a
+coalition S, and whether the player j is in S or not. More specifically, in the first sum, the indicator [j ∈ S] restricts the
+sum to coalitions where j is in S, and in the second sum to coalitions where j is not in S. Consequently, both sums can be
+grouped by coalition sizes k, with identical weights for each group, and we obtain the following reformulation:
+(AKξ (Z, z(i) ))j =
+
+p
+X
+
+1
+
+X
+
+p−1
+p k−1
+k=1
+
+kξ (1S , z(i) )
+
+
+
+−
+
+p−1
+X
+
+S⊆{1,...,p}:
+|S|=k, j∈S
+
+1
+
+X
+
+p p−1
+k
+k=0
+
+kξ (1S , z(i) ).
+
+
+S⊆{1,...,p}:
+|S|=k, j /
+∈S
+
+Thereby, for the former sum, where j ∈ S, only sizes k ≥ 1 are possible, and for the latter sum, only sizes k ≤ p − 1 are
+possible.
+Lemma 1 - Computing sums over coalitions of size k. Consider kξ (1S , z(i) ) for a candidate coalition z(i) ∈ {0, 1}p .
+We now define the helper variables γ = (γ1 , . . . , γp )⊤ ∈ Rp and δ = (δ1 , . . . , δp )⊤ ∈ Rp for each j as follows:
+(
+αj
+γj =
+βj
+
+(
+
+(i)
+
+zj = 0
+,
+(i)
+zj = 1
+
+δj =
+22
+
+βj
+αj
+
+(i)
+
+zj = 0
+.
+(i)
+zj = 1
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+Here, given a specific z(i) , γj corresponds to the j-th multiplicative term of the kernel value kξ (1S , z(i) ) in the case that
+j∈
+/ S, while δj is the j-th multiplicative term when j ∈ S. For a fixed z(i) , this reduces the j-th multiplicative term of
+kξ (1S , z(i) ) to two possible values and enables a rewriting that depends only on the coalition S:
+kξ,z(i) (1S ) = kξ (1S , z(i) )
+Y Y
+=
+γj
+δj .
+j/
+∈S
+
+j∈S
+
+Now consider the following generating polynomial in its factorised and expanded form respectively:
+P (ζ) =
+
+p
+Y
+
+(γj + δj ζ) =
+
+j=1
+
+p
+X
+
+ck ζ k .
+
+k=0
+
+This constitutes a univariate polynomial in ζ of degree p, with coefficients ck for k = 0, . . . , p. Notably, the coefficient ck
+for the k-th power of ζ corresponds to the sum of all kernel values kξ (1S , z(i) ) for coalitions S of size k:
+X
+ck =
+kξ (1S , z(i) ).
+S⊆{1,...,p}:
+|S|=k
+
+Proof. Expanding the factorised polynomial means that, from each factor (γj + δj ζ) for j = 1, ..., p, one chooses exactly
+one of the two summands, multiplies all chosen summands and sums over all possible choices for such monomials. Each
+such choice pattern is naturally encoded by a coalition S ⊆ {1, . . . , p}, where
+S = {j ∈ {1, . . . , p} : One chooses the term δj ζ in factor j}.
+Equivalently, for a given S, one chooses δj ζ if j ∈ S, and γj otherwise. This produces the monomial
+Y Y 
+γj
+δj ζ |S| .
+j∈S
+
+j/
+∈S
+
+Grouping all possible monomials by their degree k (i.e., by the size of the corresponding coalition S) and summing over
+their coefficients gives the coefficient ck of ζ k :
+X Y Y 
+ck =
+γj
+δj
+S⊆{1,...,p}: j /
+∈S
+|S|=k
+
+X
+
+=
+
+j∈S
+
+kξ (1S , z(i) ).
+
+S⊆{1,...,p}:
+|S|=k
+
+This is exactly the sum of all kernel values kξ (1S , z(i) ) for coalitions S of size k, as claimed.
+Note that the polynomial P (ζ) can equivalently be rewritten as a generating polynomial whose coefficients are scaled ESPs:
+P (ζ) =
+
+=
+
+p
+Y
+
+(γj + δj ζ)
+
+j=1
+ p
+Y
+
+γj
+
+p 
+Y
+
+j=1
+
+=
+
+j=1
+
+p Y
+p
+X
+
+1+
+
+δj 
+ζ
+γj
+
+ 
+
+γj ek δ ⊘ γ ζ k .
+
+k=0 j=1
+
+Here ek (δ ⊘ γ) denotes the k-th ESP in the variables δ ⊘ γ ∈ Rp , with ⊘ denoting the element-wise division, and the
+product over γ constitutes the associated scaling.
+23
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+Lemma 2 - Computing sums over coalitions of size k containing a player j. Consider the following generating
+polynomial, which is obtained by dividing P (ζ) by the factor corresponding to a player j ∈ {1, . . . , p}, in its factorised and
+expanded form respectively:
+Qj (ζ) =
+
+P (ζ)
+=
+(γj + δj ζ)
+
+Y
+
+(γr + δr ζ) =
+
+p−1
+X
+(j)
+dk ζ k .
+k=0
+
+r∈{1,...,p}\{j}
+
+(j)
+
+This constitutes a univariate polynomial in ζ of degree p − 1, with coefficients dk for k = 0, ..., p − 1. Notably, for
+(j)
+k ∈ {1, . . . , p}, the coefficient dk−1 for the (k − 1)-th power of ζ multiplied by δj corresponds to the sum of all kernel
+values kξ (1S , z(i) ) for coalitions S of size k that contain the player j:
+X
+(j)
+dk−1 δj =
+kξ (1S , z(i) ).
+S⊆{1,...,p}:
+|S|=k, j∈S
+
+Proof. Similar to Lemma 1, expanding the factorised polynomial Qj (ζ) means that, for each r ∈ {1, . . . , p} \ {j}, one
+chooses exactly one of the two summands, multiplies all chosen summands and sums over all possible choices for such
+monomials. Each such choice pattern is naturally encoded by a coalition T ⊆ {1, . . . , p} \ {j}, where
+T = {r ∈ {1, . . . , p} \ {j} : One chooses the term δr ζ in factor r}.
+Equivalently, for a given T , one chooses δr ζ if r ∈ T , and γr otherwise. This produces the monomial
+ Y
+Y 
+γr
+δr ζ |T | .
+r/
+∈T, r̸=j
+
+r∈T
+
+Grouping all possible monomials by their degree k − 1 (i.e., by the size of the corresponding coalition T ) and summing over
+(j)
+their coefficients gives the coefficient dk−1 of ζ k−1 :
+ Y
+X
+Y 
+(j)
+dk−1 =
+γr
+δr .
+T ⊆{1,...,p}\{j}: r /
+∈T, r̸=j
+|T |=k−1
+
+r∈T
+
+Now map such T to a coalition S = T ∪ {j}, so |S| = k and j ∈ S. Summing over the coefficients of the monomials for all
+such S (equivalently, over all T ⊆ {1, . . . , p} \ {j} with |T | = k − 1) gives:
+Y Y 
+X
+X
+kξ (1S , z(i) ) =
+γr
+δr
+S⊆{1,...,p}:
+|S|=k, j∈S
+
+S⊆{1,...,p}:
+|S|=k, j∈S
+
+X
+
+=
+
+r/
+∈S
+
+r∈S
+
+
+
+Y
+
+T ⊆{1,...,p}\{j}: r /
+∈T, r̸=j
+|T |=k−1
+
+γr
+
+Y
+
+
+δr δj
+
+r∈T
+
+(j)
+
+= dk−1 δj .
+This is exactly the sum of all kernel values kξ (1S , z(i) ) for coalitions S of size k that contain the player j, as claimed.
+Lemma 3 - Computing sums over coalitions of size k not containing a player j. It follows trivially that the sum of
+all kernel values kξ (1S , z(i) ) for coalitions S of size k that do not contain the player j can be computed as the difference
+between the sum of all kernel values for coalitions S of size k (Lemma 1) and the sum of all kernel values for coalitions S
+of size k that contain the player j (Lemma 2):
+X
+(j)
+kξ (1S , z(i) ) = ck − dk−1 δj ,
+S⊆{1,...,p}:
+|S|=k, j /
+∈S
+(j)
+
+for k = 0, ..., p − 1. Here we define d−1 := 0, so that the identity also covers the case k = 0.
+24
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+Combining the results. Combining the results from the previous paragraphs, we obtain the following identity for the j-th
+entry of AKξ (Z, z(i) ), which reduces the expression to weighted sums of size p:
+(AKξ (Z, z(i) ))j =
+
+=
+
+p
+X
+
+1
+
+X
+
+kξ (1S , z(i) ) −
+
+
+p−1
+
+p k−1
+k=1
+p
+X
+k=1
+
+S⊆{1,...,p}:
+|S|=k, j∈S
+
+p−1
+ X
+(j)
+
+d
+δ
+−
+k−1 j
+p−1
+
+1
+
+1
+
+p−1
+X
+
+p
+k=0
+
+1
+
+X
+
+
+p−1
+k
+
+kξ (1S , z(i) )
+
+S⊆{1,...,p}:
+|S|=k, j /
+∈S
+
+
+ ck − d(j)
+k−1 δj .
+
+p p−1
+k
+k=0
+
+p k−1
+
+Implementation. To compute the coefficients of P (ζ) we propose the following approach: For a given z(i) , first compute
+the helper variables γ and δ from the kernel values (αj , βj ) for j = 1, ..., p. This costs O(p). The coefficients ck for
+k = 0, ..., p can then be obtained by the following standard degree-by-degree dynamic program: Initialize
+(0)
+
+c0 = 1,
+
+(0)
+
+ck = 0 (k ≥ 1),
+
+and in iterations j = 1, . . . , p update
+(j)
+
+(j−1)
+
+ck = γj ck
+
+(j−1)
+
++ δj ck−1
+
+(k = 0, . . . , j),
+
+(j−1)
+
+with the convention c−1 = 0. This computes all coefficients in O(p2 ) time. Given the coefficients ck of P (ζ), we can
+compute the coefficients of Qj (ζ) for each j = 1, ..., p by dividing the degree-p polynomial P (ζ) by the linear factor
+(γj + δj ζ) via synthetic division. This scales as O(p) per j, and thus O(p2 ) for all j. Based on P (ζ) and Qj (ζ) for each
+j = 1, ..., p, the entire term AKξ (Z, z(i) ) is computable in O(p2 ).
+Alternatively, for a numerically more stable implementation, one can avoid polynomial division and obtain the required
+quantities by convolution of coefficients of prefix- and suffix-polynomials.
+
+25
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+Theorem B.2. The term AKξ (Z, Z)A⊤ ∈ Rp×p is efficiently computable in O(p4 ) time.
+p
+
+Proof. In the following, we will consider the matrix-valued quadratic function AKξ (Z, Z)A⊤ ∈ Rp×p , where A ∈ Rp×2
+p
+p
+and Kξ (Z, Z) ∈ R2 ×2 . Initially, we will show how each entry of this matrix can be rewritten as a weighted sum of kernel
+evaluations across coalition pairs with weights according to the Shapley matrix A. We then recognize that the additive
+kernel evaluations associated with certain groups of coalition pairs share the same weights. We will then show how inner
+sums of kernel values for these groups can be computed more efficiently by identifying them with scaled, bivariate ESPs. In
+detail, we will show how the sums of kernel values over all coalition pairs of size (a, b) can be computed efficiently, and
+how the sums over coalition pairs of sizes (a, b) (not) containing players i and j can be computed for i ̸= j and for i = j
+respectively. Lastly, we will combine everything and propose an implementation to compute the complete term in O(p4 )
+time.
+Rewriting entries of AKξ (Z, Z)A⊤ as sums of kernel evaluations for coalition pair groups of identical size. Consider
+the (i, j) entry of AKξ (Z, Z)A⊤ , where i, j ∈ {1, . . . , p}, which corresponds to the covariance between the SVs of players
+i and j:
+X
+(AKξ (Z, Z)A⊤ )i,j =
+Ai,S Aj,T kξ (1S , 1T ).
+S,T ⊆{1,...,p}
+
+By plugging in the definition of the Shapley matrix A we equivalently obtain
+1 [i ∈ S] [j ∈ T ]
+ p−1  kξ (1S , 1T )
+p−1
+p2 |S|−1
+|T |−1
+
+X
+
+(AKξ (Z, Z)A⊤ )i,j =
+
+S,T ⊆{1,...,p}
+
+X
+
+−
+
+S,T ⊆{1,...,p}
+
+X
+
+−
+
+S,T ⊆{1,...,p}
+
+X
+
++
+
+S,T ⊆{1,...,p}
+
+1 [i ∈ S] [j ∈
+/ T]
+ p−1 kξ (1S , 1T )
+p−1
+p2 |S|−1
+|T |
+1 [i ∈
+/ S] [j ∈ T ]
+ p−1  kξ (1S , 1T )
+p2 p−1
+|S|
+|T |−1
+1 [i ∈
+/ S] [j ∈
+/ T]
+ p−1 kξ (1S , 1T ).
+p−1
+2
+p
+|S|
+|T |
+
+This reflects four possible cases based on whether i is in S or not, and whether j is in T or not. Note that the weights,
+besides the total amount of players p, only depend on the sizes of the coalitions S and T , and whether they contain the
+players i and j respectively. Consequently, the double sums can be grouped by coalition pair sizes (a, b) = (|S|, |T |) and
+contained players i and j, with identical weights for each group. This gives the following reformulation:
+(AKξ (Z, Z)A⊤ )i,j =
+
+−
+
+p X
+p
+X
+
+p
+p−1
+XX
+a=1 b=0
+
+−
+
+p−1 X
+p−1
+X
+
+b−1
+
+p2 a−1
+
+p2
+
+b
+
+
+1
+
+
+p−1
+p−1
+a
+
+b−1
+
+
+1
+ p−1
+
+p2 p−1
+a
+a=0 b=0
+
+b
+
+X
+
+
+kξ (1S , 1T )
+
+S,T ⊆{1,...,p}:
+|S|=a, |T |=b, i∈S, j∈T
+
+
+1
+
+
+p−1
+p−1
+
+p−1 X
+p
+X
+a=0 b=1
+
++
+
+
+1
+ p−1
+
+p−1
+p2 a−1
+a=1 b=1
+
+X
+
+
+kξ (1S , 1T )
+
+S,T ⊆{1,...,p}:
+|S|=a, |T |=b, i∈S, j /
+∈T
+
+X
+
+kξ (1S , 1T )
+
+
+
+S,T ⊆{1,...,p}:
+|S|=a, |T |=b, i /
+∈S, j∈T
+
+X
+
+
+kξ (1S , 1T ) .
+
+S,T ⊆{1,...,p}:
+|S|=a, |T |=b, i /
+∈S, j /
+∈T
+
+Thereby, whenever i ∈ S (first and second sum), only sizes a ≥ 1 are possible, and whenever i ∈
+/ S (third and fourth sum),
+only sizes a ≤ p − 1 are possible. Similarly, whenever j ∈ T (first and third sum), only sizes b ≥ 1 are possible, and
+whenever j ∈
+/ T (second and fourth sum), only sizes b ≤ p − 1 are possible.
+26
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+Lemma 4 - Computing sums over coalition pairs of size (a, b). Consider the multiplicative kernel kξ evaluated on two
+coalitions S, T ⊆ {1, . . . , p}. This gives rise to four cases, where the r-th multiplicative term of kξ (1S , 1T ) is αr if r is in
+both S and T , or in neither of them, and βr if r is in exactly one of the two coalitions:
+Y
+Y
+Y
+Y
+kξ (1S , 1T ) =
+αr
+βr
+βr
+αr .
+r∈{1,...,p}:
+r∈S, r∈T
+
+r∈{1,...,p}:
+r∈S, r /
+∈T
+
+r∈{1,...,p}:
+r/
+∈S, r∈T
+
+r∈{1,...,p}:
+r/
+∈S, r /
+∈T
+
+Now consider the following generating polynomial in its factorised and expanded form respectively, where in the factorised
+form, for each coordinate r, the local factor fr (ζ1 , ζ2 ) := αr (1 + ζ1 ζ2 ) + βr (ζ1 + ζ2 ) corresponds to the four cases of
+whether r is in S and T or not:
+Y
+F (ζ1 , ζ2 ) =
+fr (ζ1 , ζ2 )
+r∈{1,...,p}
+
+=
+
+Y
+
+
+αr (1 + ζ1 ζ2 ) + βr (ζ1 + ζ2 )
+
+r∈{1,...,p}
+
+=
+
+p X
+p
+X
+
+G(a, b) ζ1a ζ2b .
+
+a=0 b=0
+
+This constitutes a generating polynomial whose coefficients are scaled, generalized bivariate ESPs. For the cases where r is
+in both S and T , or in neither of them, both contribute the same multiplicative term αr , and in the cases where r is in exactly
+one of the two coalitions, both contribute the same multiplicative term βr . This is a bivariate polynomial in ζ1 and ζ2 of
+degree p in each variable, with coefficients G(a, b) for a, b = 0, ..., p. Notably, the coefficient G(a, b) for the monomial
+ζ1a ζ2b corresponds to the sum of all kernel values kξ (1S , 1T ) for coalition pairs (S, T ) of size (a, b):
+X
+G(a, b) =
+kξ (1S , 1T ).
+S,T ⊆{1,...,p}:
+|S|=a, |T |=b
+
+Proof. Expanding the factorised polynomial F (ζ1 , ζ2 ) means that, for each r = 1, ..., p, one chooses exactly one of the
+four summands in the local factor fr (ζ1 , ζ2 ), multiplies all chosen summands and sums over all possible choices for such
+monomials. Each such choice pattern is naturally encoded by a coalition pair (S, T ), where
+S = {r ∈ {1, . . . , p} : One chooses the term βr ζ1 or αr ζ1 ζ2 in factor r},
+and
+T = {r ∈ {1, . . . , p} : One chooses the term βr ζ2 or αr ζ1 ζ2 in factor r}.
+Grouping all possible monomials by their degree (a, b) (i.e., by the size of the corresponding coalition pair (S, T )) and
+summing over their coefficients gives the coefficient G(a, b) of ζ1a ζ2b . This is exactly the sum of all kernel values kξ (1S , 1T )
+for coalition pairs (S, T ) of size (a, b), as claimed.
+Lemma 5 - Computing sums over coalition pairs of size (a, b) (not) containing players i and j for i ̸= j. Now
+consider the sum of all kernel values kξ (1S , 1T ) for coalition pairs (S, T ) of size (a, b) that contain (or do not contain) the
+players i and j respectively. To this end, we introduce the following local factors, fixing membership of a player r in S and
+T respectively:
+frS∈ (ζ1 , ζ2 ) = αr ζ1 ζ2 + βr ζ1 = ζ1 (αr ζ2 + βr ),
+frS ∈/ (ζ1 , ζ2 ) = αr + βr ζ2 ,
+frT ∈ (ζ1 , ζ2 ) = αr ζ1 ζ2 + βr ζ2 = ζ2 (αr ζ1 + βr ),
+frT ∈/ (ζ1 , ζ2 ) = αr + βr ζ1 .
+Specifically, the first local factor frS∈ (ζ1 , ζ2 ) corresponds to the case that r is in S. This fixes ζ1 as a multiplicative term,
+and the remaining term reflects the two cases of whether r is in T or not. In the former case ζ1 is multiplied by αr ζ2 , as r is
+27
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+contained in both S and T , while in the latter case ζ1 is multiplied by βr , as r is contained in S but not in T . The remaining
+local factors are defined analogously for the cases that r is not in S, r is in T , and r is not in T .
+Now, consider the following generating polynomial in its factorised and expanded form respectively, where u, v ∈ {0, 1}
+indicate for the players i and j whether i ∈ S and j ∈ T respectively or not, and we assume the case i ̸= j:
+(u,v)
+
+Fi,j
+
+Y
+
+(ζ1 , ζ2 ) =
+
+fr (ζ1 , ζ2 )
+
+r∈{1,...,p}\{i,j}
+
+
+
+· u fiS∈ (ζ1 , ζ2 ) + (1 − u) fiS ∈/ (ζ1 , ζ2 )
+
+
+· v fjT ∈ (ζ1 , ζ2 ) + (1 − v) fjT ∈/ (ζ1 , ζ2 )
+(p+u−1) (p+v−1)
+
+=
+
+X
+
+X
+
+a=u
+
+b=v
+
+(u,v)
+
+Gi,j (a, b) ζ1a ζ2b .
+
+In the factorised form, for each player r ∈ {1, . . . , p} \ {i, j}, the local factor fr (ζ1 , ζ2 ) corresponds to the four cases of
+whether r is in S and T or not, as introduced in Lemma 4. For the players i and j, the local factors are defined according to
+fixed membership of i ∈ S and j ∈ T respectively, as indicated by the variables u, v. This is a bivariate polynomial in ζ1
+(u,v)
+and ζ2 of degree p in each variable, with coefficients Gi,j (a, b) for a = u, . . . , (p + u − 1) and b = v, . . . , (p + v − 1).
+(u,v)
+
+Notably, the coefficient Gi,j (a, b) for the monomial ζ1a ζ2b corresponds to the sum of all kernel values kξ (1S , 1T ) for
+coalition pairs (S, T ) of size (a, b) that contain (or do not contain) the players i and j respectively according to u and v:
+(u,v)
+
+X
+
+Gi,j (a, b) =
+
+[i ∈ S]u [i ∈
+/ S]1−u [j ∈ T ]v [j ∈
+/ T ]1−v kξ (1S , 1T ).
+
+S,T ⊆{1,...,p}:
+|S|=a, |T |=b
+
+Proof. This follows trivially from the same reasoning as in the previous lemmas.
+Lemma 6 - Computing sums over coalition pairs of size (a, b) (not) containing players i and j for i = j. Consider the
+case that i = j. This gives rise to the following generating polynomial in its factorised and expanded form respectively,
+where the indicator variables u, v ∈ {0, 1} indicate whether i ∈ S and i ∈ T respectively or not:
+(u,v)
+
+Fi,i
+
+Y
+
+(ζ1 , ζ2 ) =
+
+fr (ζ1 , ζ2 )
+
+r∈{1,...,p}\{i}
+
+
+
+· [uv] αi ζ1 ζ2 + [u(1 − v)] βi ζ1 + [(1 − u)v] βi ζ2 + [(1 − u)(1 − v)] αi
+
+
+
+(p+u−1) (p+v−1)
+
+X
+
+X
+
+a=u
+
+b=v
+
+=
+
+(u,v)
+
+Gi,i
+
+(a, b) ζ1a ζ2b .
+
+This is constructed similarly to the previous case where i ̸= j (Lemma 5), but now the local factor for player i corresponds
+to the four cases of whether i is in S and T or not, as indicated by the variables u, v. As opposed to the previous case, for
+each value of (u, v), this only gives rise to one possible local factor for player i. In contrast, in the case i ̸= j, each value of
+(u, v) only dictates whether i ∈ S and whether j ∈ T , but not whether i ∈ T and whether j ∈ S, thus giving rise to four
+possible local factors.
+(u,v)
+
+Notably, the coefficient Gi,i (a, b) for the monomial ζ1a ζ2b corresponds to the sum of all kernel values kξ (1S , 1T ) for
+coalition pairs (S, T ) of size (a, b) that contain (or do not contain) the player i according to u and v:
+(u,v)
+
+Gi,i
+
+(a, b) =
+
+X
+
+[i ∈ S]u [i ∈
+/ S]1−u [i ∈ T ]v [i ∈
+/ T ]1−v kξ (1S , 1T ).
+
+S,T ⊆{1,...,p}:
+|S|=a, |T |=b
+
+Proof. This follows trivially from the same reasoning as in the previous lemmas.
+28
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+Combining the results. Combining the results from the previous lemmas, we obtain the following identity for the (i, j)
+entry of AKξ (Z, Z)A⊤ :
+
+(AKξ (Z, Z)A⊤ )i,j =
+
+−
+
+p X
+p
+X
+
+p X
+p−1
+X
+a=1 b=0
+
+−
+
+p2 a−1
+
+b
+
+p2
+
+
+
+1
+(0,1)
+
+
+G
+(a,
+b)
+i,j
+p−1
+p−1
+
+p2
+
+
+
+1
+(0,0)
+
+
+G
+(a,
+b)
+.
+i,j
+p−1
+p−1
+
+p−1 X
+p−1
+X
+a=0 b=0
+
+b−1
+
+
+
+1
+(1,0)
+
+
+G
+(a,
+b)
+i,j
+p−1
+p−1
+
+p−1 X
+p
+X
+a=0 b=1
+
++
+
+
+
+1
+ p−1 G(1,1)
+i,j (a, b)
+
+p−1
+p2 a−1
+a=1 b=1
+
+a
+
+b−1
+
+a
+
+b
+
+Implementation. In the following, we will propose an efficient implementation for computing AKξ (Z, Z)A⊤ . To this
+end, we will first show that each (i, j) entry can be reformulated as a weighted sum over coefficients of the polynomial
+containing all remaining factors except for the players i and j, and then identify groups of additive terms in those weighted
+sums with weighted bilinear forms in these coefficient tables. We will then identify the coefficients of this polynomial based
+on prefix and suffix tables, and extend this to identify the bilinear forms with contractions of the prefix and suffix tables. We
+then show that these contracted prefix and suffix tables can be efficiently updated between player pairs, which is exploited to
+propose an algorithm to efficiently compute the entire AKξ (Z, Z)A⊤ .
+Formulating the (i, j) entry as a weighted sum over coefficients of the polynomial containing the remaining factors: Consider
+the polynomial containing all local factors except for the players i and j:
+
+Y
+
+F\{i,j} (ζ1 , ζ2 ) =
+
+fr (ζ1 , ζ2 ) =
+
+p−2 X
+p−2
+X
+
+G\{i,j} (a, b) ζ1a ζ2b .
+
+a=0 b=0
+
+r∈{1,...,p}\{i,j}
+
+We collect the coefficients of this polynomial in a coefficient table G\{i,j} ∈ Rp−1×p−1 , with the (a, b)-th entry of the
+matrix given by G\{i,j} (a, b). For the case where i = j, this amounts to the following polynomial:
+
+Y
+
+F\{i} (ζ1 , ζ2 ) =
+
+fr (ζ1 , ζ2 ) =
+
+p−1 X
+p−1
+X
+
+G\{i} (a, b) ζ1a ζ2b ,
+
+a=0 b=0
+
+r∈{1,...,p}\{i}
+
+with the coefficients collected in the table G\{i} ∈ Rp×p . Given the coefficients, G\{i,j} (a, b) and G\{i} (a, b) respectively,
+(u,v)
+
+the coefficients of the polynomials Fi,j (ζ1 , ζ2 ) for all i, j ∈ {1, . . . , p} and u, v ∈ {0, 1}, which are required to compute
+the entries of AKξ (Z, Z)A⊤ , can easily be obtained as a weighted sum with shifts in the indices according to the local
+factors of players i and j. For instance, for the case where i ̸= j and u = 1 and v = 1, the coefficient can be obtained as
+follows:
+(1,1)
+
+Gi,j (a, b) = αi αj G\{i,j} (a − 2, b − 2)
++ αi βj G\{i,j} (a − 1, b − 2)
++ βi αj G\{i,j} (a − 2, b − 1)
++ βi βj G\{i,j} (a − 1, b − 1),
+where out-of-range indices are treated as 0. Plugging this into the formulation of the (i, j) entry of AKξ (Z, Z)A⊤ from
+29
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+above, it can be reformulated in the following way for the case that i ̸= j:
+⊤
+
+(AKξ (Z, Z)A )i,j =
+
+p X
+p
+X
+a=1 b=1
+
+
+1
+
+
+αi αj G\{i,j} (a − 2, b − 2) + αi βj G\{i,j} (a − 1, b − 2)
+p−1
+p−1
+
+p2 a−1
+
+b−1
+
++ βi αj G\{i,j} (a − 2, b − 1) + βi βj G\{i,j} (a − 1, b − 1)
+−
+
+−
+
+p X
+p−1
+X
+
+
+1
+ p−1 αi αj G\{i,j} (a − 1, b − 1) + αi βj G\{i,j} (a − 2, b − 1)
+
+b
++ βi αj G\{i,j} (a − 1, b) + βi βj G\{i,j} (a − 2, b)
+
+p−1
+p2 a−1
+a=1 b=0
+
+p−1 X
+p
+X
+a=0 b=1
+
++
+
+
+
+p2
+
+p−1 X
+p−1
+X
+a=0 b=0
+
+p2
+
+
+1
+
+
+αi αj G\{i,j} (a − 1, b − 1) + αi βj G\{i,j} (a, b − 1)
+p−1
+p−1
+a
+
+b−1
+
+
++ βi αj G\{i,j} (a − 1, b − 2) + βi βj G\{i,j} (a, b − 2)
+
+
+1
+
+
+αi αj G\{i,j} (a, b) + αi βj G\{i,j} (a − 1, b)
+p−1
+p−1
+a
+
+b
+
++ βi αj G\{i,j} (a, b − 1) + βi βj G\{i,j} (a − 1, b − 1)
+= αi αj
+
+p X
+p
+X
+
+p p−1
+
+XX
+1
+ p−1 G\{i,j} (a − 2, b − 2) −
+p−1
+
+p2 a−1
+a=1 b=1
+−
+
+p−1 X
+p
+X
+a=0 b=1
+
++ α i βj
+
+p2
+
+XX
+1
+ p−1 G\{i,j} (a − 1, b − 1) +
+p−1
+a
+
+p−1 X
+p
+X
+
+p2
+
+b−1
+
+1
+ p−1 G\{i,j} (a, b − 1) +
+p−1
+b−1
+
+p−1 X
+p
+X
+a=0 b=1
+
+p2
+
+p X
+p
+X
+
+a
+
+b−1
+
+b−1
+
+1
+ p−1 G\{i,j} (a, b − 2) +
+
+p2 p−1
+a
+a=0 b=1
+
+p2
+
+a
+
+b−1
+
+b
+
+1
+ p−1 G\{i,j} (a − 1, b)
+
+p−1
+p2 a−1
+a=1 b=0
+p−1 X
+p−1
+X
+a=0 b=0
+
+1
+ p−1 G\{i,j} (a − 1, b − 1) −
+
+b
+
+
+1
+
+
+G
+(a
+−
+1,
+b)
+\{i,j}
+p−1
+p−1
+
+p
+p−1
+XX
+
+1
+ p−1 G\{i,j} (a − 1, b − 2) +
+p−1
+
+b
+
+1
+ p−1 G\{i,j} (a − 2, b − 1)
+
+p−1
+p2 a−1
+a=1 b=0
+
+a=0 b=0
+
+b−1
+
+p−1
+p2 a−1
+a=1 b=1
+p−1 X
+p
+X
+
+p X
+p−1
+X
+
+p−1 X
+p−1
+X
+
+1
+ p−1 G\{i,j} (a − 2, b − 1) −
+
+p−1
+p2 a−1
+a=1 b=1
+
+−
+
+b−1
+
+a
+
+
+1
+ p−1 G\{i,j} (a, b)
+
+p2 p−1
+a
+a=0 b=0
+
+1
+ p−1 G\{i,j} (a − 1, b − 2) −
+
+ p
+X p
+X
+
+−
+
++ β i βj
+
+b−1
+
+p−1
+p2 a−1
+a=1 b=1
+
+a=0 b=1
+
++ βi αj
+
+1
+ p−1 G\{i,j} (a − 1, b − 1)
+2 p−1
+p
+a−1
+b
+a=1 b=0
+p−1 p−1
+
+p X
+p
+X
+
+−
+
+
+
+b
+
+
+1
+
+
+G
+(a,
+b
+−
+1)
+\{i,j}
+p−1
+p−1
+
+p2
+
+a
+
+p X
+p−1
+X
+
+b
+
+1
+ p−1 G\{i,j} (a − 2, b)
+
+p−1
+p2 a−1
+a=1 b=0
+
+p−1 X
+p−1
+X
+
+b
+
+
+1
+ p−1 G\{i,j} (a − 1, b − 1) .
+
+p2 p−1
+a
+a=0 b=0
+
+b
+
+This reveals that the (i, j) entry can be obtained as a weighted sum over the coefficient table G\{i,j} containing 16 major
+additive terms. For the case where i = j, a similar formulation can be obtained as a weighted sum over the coefficients
+collected in G\{i} containing 4 major additive terms:
+(AKξ (Z, Z)A⊤ )i,i = αi
+
+ p
+X p
+X
+a=1 b=1
+
+− βi
+
+p p−1
+
+
+X X
+1
+
+
+G
+(a
+−
+1,
+b
+−
+1)
+−
+β
+i
+\{i}
+p−1
+p−1
+
+p2 a−1
+
+p−1 X
+p
+X
+a=0 b=1
+
+p
+
+b−1
+
+a=1 b=0
+
+p−1 X
+p−1
+
+X
+1
+ p−1 G\{i} (a, b − 1) + αi
+2 p−1
+a
+
+b−1
+
+a=0 b=0
+
+p2
+
+
+1
+
+
+G
+(a
+−
+1,
+b)
+\{i}
+p−1
+p−1
+
+p2 a−1
+
+b
+
+
+1
+
+
+G
+(a,
+b)
+\{i}
+p−1
+p−1
+a
+
+b
+
+Identifying groups of additive terms with weighted bilinear forms: Each of the above major additive terms corresponds to a
+30
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+weighted bilinear form in G\{i,j} or G\{i} respectively. In particular, for the case where i ̸= j, all 16 terms are of the form
+p−1 X
+p−1
+X
+
+⊤
+wleft
+G\{i,j} wright =
+wleft,a · G\{i,j} (a, b) · wright,b
+a=0 b=0
+
+=
+
+p−1 X
+p−1
+X
+
+wleft (a) · G\{i,j} (a, b) · wright (b),
+
+a=0 b=0
+
+with wleft ∈ Rp and wright ∈ Rp as the corresponding weight vectors, which can be obtained for each of the 16 terms by
+collecting the p associated weights, appending zeros for out-of-range indices and reindexing the sum accordingly. For
+instance, for the first term in the part multiplied by αi αj , this bilinear form can be obtained as follows:
+p−1 p−1
+
+p X
+p
+X
+a=1 b=1
+
+p2
+
+XX
+1
+ p−1 G\{i,j} (a − 2, b − 2) =
+p−1
+a−1
+
+b−1
+
+a=0 b=0
+
+1
+p
+
+ G\{i,j} (a, b)
+
+p−1
+a+1
+
+1
+p
+
+,
+
+p−1
+b+1
+
+
+where for ease of notation, we adopt the convention that nk = 0 for k > n. Similarly, for the case where i = j, all 4 major
+additive terms can be identified as weighted bilinear forms in G\{i} .
+Identifying the polynomial coefficients based on prefix and suffix tables: In order to obtain the coefficient tables G\{i,j}
+for pairs (i, j), we define for all i ∈ {1, . . . , p} and j ∈ {0, 1, . . . , p} the prefix and suffix polynomials containing all local
+factors except for i and j, but before and after j respectively:
+Y
+
+′
+P r\{i,j}
+(ζ1 , ζ2 ) =
+
+fr (ζ1 , ζ2 ) =
+
+Y
+
+P r\{i,j} (a, b) ζ1a ζ2b ,
+
+a=0 b=0
+
+r∈{1,...,j}\{i,j}
+
+Su′\{i,j} (ζ1 , ζ2 ) =
+
+p−1 X
+p−1
+X
+
+fr (ζ1 , ζ2 ) =
+
+p−1 X
+p−1
+X
+
+Su\{i,j} (a, b) ζ1a ζ2b .
+
+a=0 b=0
+
+r∈{j,...,p}\{i,j}
+
+This yields the associated coefficient tables P r\{i,j} ∈ Rp×p and Su\{i,j} ∈ Rp×p . Then, using the convention that
+′
+P r\{i,1}
+(ζ1 , ζ2 ) = Su′\{i,p} (ζ1 , ζ2 ) = 1 for all i ∈ {1, . . . , p}, the coefficient table G\{i,j} can be obtained as the
+convolution of the two tables P r\{i,j} and Su\{i,j} . In particular, the (a, b)-th entry of G\{i,j} is defined as follows:
+X
+X
+G\{i,j} (a, b) =
+P r\{i,j} (a1 , b1 ) Su\{i,j} (a2 , b2 ).
+a1 ,a2 :
+b1 ,b2 :
+a1 +a2 =a b1 +b2 =b
+
+For the case where i = j, the coefficient table G\{i} can trivially be obtained as Su\{i,0} .
+Identifying the bilinear forms based on contracted prefix and suffix tables: Plugging this expression for the coefficient table
+G\{i,j} in the case where i ̸= j into the bilinear form expression derived above, it can be reformulated as follows:
+p−1 X
+p−1
+ X
+X
+
+⊤
+wleft
+G\{i,j} wright =
+wleft (a) · wright (b) ·
+
+p−1 p−1
+p−1 X
+p−1 
+X
+X X
+a1 =0 a2 =0 b1 =0 b2 =0
+
+=
+
+p−1 X
+p−1  p−1−a
+X
+X2
+a2 =0 b1 =0
+
+=
+
+p−1 X
+p−1
+X
+
+
+P r\{i,j} (a1 , b1 ) · Su\{i,j} (a2 , b2 )
+
+a1 ,a2 :
+b1 ,b2 :
+a1 +a2 =a b1 +b2 =b
+
+a=0 b=0
+
+=
+
+X
+
+[a1 + a2 ≤ p − 1] · [b1 + b2 ≤ p − 1]
+
+· wleft (a1 + a2 ) · wright (b1 + b2 ) · P r\{i,j} (a1 , b1 ) · Su\{i,j} (a2 , b2 )
+
+  p−1−b
+
+X1
+wleft (a1 + a2 ) · P r\{i,j} (a1 , b1 ) ·
+wright (b1 + b2 ) · Su\{i,j} (a2 , b2 )
+
+a1 =0
+
+b2 =0
+
+P rcontr.,\{i,j} (a2 , b1 ) · Sucontr.,\{i,j} (a2 , b1 ).
+
+a2 =0 b1 =0
+
+31
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+Here we denote with P rcontr.,\{i,j} (a2 , b1 ) ∈ R and Sucontr.,\{i,j} (a2 , b1 ) ∈ R the prefix and suffix entries contracted
+with the weight vectors wleft and wright respectively. These are collected across values of a2 and b1 in the contracted
+coefficient tables P rcontr.,\{i,j} ∈ Rp×p and Sucontr.,\{i,j} ∈ Rp×p . This shows that the bilinear forms can be computed by
+element-wise multiplying the contracted prefix and suffix tables and summing over the entries of the resulting table. Note
+that the contracted prefix and suffix tables can be computed independently from each other, as they are based on different
+sets of local factors and weight vectors. In particular, all 16 distinct bilinear forms can be computed based on four unique
+contracted prefix and four unique contracted suffix tables.
+For the case where i = j, the 4 unique bilinear forms can be obtained as follows:
+⊤
+wleft
+
+
+
+G\{i} wright =
+
+p−1 X
+p−1
+X
+
+wleft (a) · wright (b) ·
+
+X
+
+P r\{i,1} (a1 , b1 ) · Su\{i,0} (a2 , b2 )
+
+
+
+a1 ,a2 :
+b1 ,b2 :
+a1 +a2 =a b1 +b2 =b
+
+a=0 b=0
+
+=
+
+ X
+
+p−1 X
+p−1
+X
+
+P rcontr.,\{i,1} (a2 , b1 ) · Sucontr.,\{i,0} (a2 , b1 ).
+
+a2 =0 b1 =0
+
+This follows trivially as Su\{i,0} is equivalent to its convolution with P r\{i,1} .
+Efficiently updating the contracted prefix and suffix tables: Furthermore, we show that the contracted prefix and suffix
+tables evolve as simple, linear functions of their previous and proceeding tables respectively. In particular, the entries of
+P rcontr.,\{i,j} for j ∈ {2, . . . , p} can be obtained as a linear function of the entries of P rcontr.,\{i,j−1} :
+P rcontr.,\{i,j} (a2 , b1 ) =
+
+p−1−a
+X2
+
+wleft (a1 + a2 ) · P r\{i,j} (a1 , b1 )
+
+a1 =0
+
+=
+
+p−1−a
+X2
+
+
+wleft (a1 + a2 ) · αj−1 · P r\{i,j−1} (a1 , b1 )
+
+a1 =0
+
++ βj−1 · P r\{i,j−1} (a1 − 1, b1 )
++ βj−1 · P r\{i,j−1} (a1 , b1 − 1)
++ αj−1 · P r\{i,j−1} (a1 − 1, b1 − 1)
+
+
+
+= αj−1 · P rcontr.,\{i,j−1} (a2 , b1 )
++ βj−1 · P rcontr.,\{i,j−1} (a2 + 1, b1 )
++ βj−1 · P rcontr.,\{i,j−1} (a2 , b1 − 1)
++ αj−1 · P rcontr.,\{i,j−1} (a2 + 1, b1 − 1).
+Again, out-of-range indices are treated as 0. Similarly, the entries of Sucontr.,\{i,j} for j ∈ {0, . . . , p − 1} can be obtained as
+a linear function of the entries of Sucontr.,\{i,j+1} :
+Sucontr.,\{i,j} (a2 , b1 ) =
+
+p−1−b
+X1
+
+wright (b1 + b2 ) · Su\{i,j} (a2 , b2 )
+
+b2 =0
+
+=
+
+p−1−b
+X1
+
+
+wright (b1 + b2 ) · αj+1 · Su\{i,j+1} (a2 , b2 )
+
+b2 =0
+
++ βj+1 · Su\{i,j+1} (a2 − 1, b2 )
++ βj+1 · Su\{i,j+1} (a2 , b2 − 1)
++ αj+1 · Su\{i,j+1} (a2 − 1, b2 − 1)
+
+= αj+1 · Sucontr.,\{i,j+1} (a2 , b1 )
++ βj+1 · Sucontr.,\{i,j+1} (a2 − 1, b1 )
++ βj+1 · Sucontr.,\{i,j+1} (a2 , b1 + 1)
++ αj+1 · Sucontr.,\{i,j+1} (a2 − 1, b1 + 1).
+32
+
+
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+Proposed algorithm and runtime analysis: Based on the above findings, we propose the following algorithm for efficiently
+computing AKξ (Z, Z)A⊤ : Overall, for each i′ ∈ {1, . . . , p} independently, we compute the entries of all pairs (i′ , j ′ ) with
+j ′ ≤ i′ . Due to symmetry of AKξ (Z, Z)A⊤ , this gives all entries. In particular, for a certain i′ , we conduct two phases: A
+backward and a forward phase. In the initial backward phase, we generate - for each of the 4 different weight vectors - a
+sequence of contracted suffix tables in reverse order. Specifically, after initializing Sucontr.,\{i′ ,p} for each weight vector, we
+iteratively update the tables in backward order until we obtain Sucontr.,\{i′ ,0} across weight vectors. Thereby, we store all
+the intermediate tables, as they are needed in the subsequent forward phase. Afterwards, in the forward phase, we initialize
+the first contracted prefix table P rcontr.,\{i′ ,1} across weight vectors and iteratively update the tables in forward order until
+P rcontr.,\{i′ ,i′ −1} . At each iteration, the current contracted prefix tables across weight vectors together with the associated
+contracted suffix tables from the backward phase are used to compute all 16 bilinear forms, which are then weighted and
+summed up to obtain the corresponding entries of AKξ (Z, Z)A⊤ . The diagonal entry of AKξ (Z, Z)A⊤ for the current i′
+is computed based on the Sucontr.,\{i′ ,0} and P rcontr.,\{i′ ,1} across weight vectors. Note that in the forward phase, it is not
+necessary to persist the intermediate contracted prefix tables, as they are not needed for future computations.
+For each of p independent backward phases, where each is associated with one particular i′ , the amount of contracted suffix
+tables scales as O(p), and the computation of each of those scales as O(p2 ). This is as the size of the contracted suffix tables
+scales in O(p2 ), and each entry can be computed as a linear function of the shifted entries of the proceeding table. Overall,
+this amounts to total scaling as O(p3 ) for the backward phase for a certain i′ . Similarly, for each of p independent forward
+phases, where each is associated with a certain i′ , the amount of contracted prefix table updates, based on the preceding
+tables, scales as O(p) and the cost for each update also scales as O(p2 ). Furthermore, in each forward phase step, entries of
+AKξ (Z, Z)A⊤ are computed based on the contracted tables by element-wise multiplication and summation, which scales
+as O(p2 ). Overall, this amounts to total scaling as O(p3 ) for the forward phase for a certain i′ . In total, the computation of
+AKξ (Z, Z)A⊤ thus scales as O(p4 ).
+Note that updating the non-contracted prefix and suffix coefficient tables in the forward and backward phase, as opposed
+to the contracted ones, would induce computational cost scaling as O(p5 ). This is because the bilinear form computation
+via explicit convolution - and without efficiently updating the contracted tables - would require an additional weighted
+summation scaling as O(p).
+
+33
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+Theorem B.3. The EIG about the SVs ϕ for a candidate coalition z(i) ∈ {0, 1}p (Formula 6 in Section 3.4) is computable
+in O(p4 + t3 ).
+Proof. For clarity, we repeat the derived expression of the EIG about the SVs ϕ for a candidate coalition z(i) ∈ {0, 1}p at
+iteration t:
+h 
+ i
+(t)
+2
+EIGϕ (z(i) ) ∝ C ′ + log e⊤
+i Σ(ν|Dt ) + σϵ I ei
+h 
+ i
+2
+− log e⊤
+i Σ(ν|Dt ) + σϵ I − Q ei .
+p
+
+p
+
+p
+
+p
+
+2 ×2
+Here, C ′ is constant, I ∈ R2 ×2 is the identity matrix, and Qi,i = e⊤
+, is
+i Qei , the i-th diagonal entry of Q ∈ R
+defined as
+⊤
+−1
+
+Qi,i = AΣ(ν|Dt ) ei
+AΣ(ν|Dt ) A⊤
+AΣ(ν|Dt ) ei .
+(12)
+(i)
+The EIG depends on the marginal posterior variance e⊤
+i Σ(ν|Dt ) ei = Var(ν(z ) | Dt ) ∈ R and on Qi,i ∈ R. While the
+computation of the former term scales as O(t3 ) (see Subsection A.1), naive computation of the EIG is dominated by the
+latter, which is prohibitively expensive in many settings. We will now show how the two main components of Qi,i , namely
+AΣ(ν|Dt ) ei and AΣ(ν|Dt ) A⊤ , can be computed efficiently using Theorems B.1 and B.2, and how this enables an efficient
+computation of Qi,i . Here, we denote by X(t) ∈ R(t−1)×p the matrix containing all previously evaluated coalitions at
+iteration t.
+
+We propose initially to compute Var(ν(z(i) ) | Dt ), separately from Qi,i , as it cannot be obtained as a submatrix of the
+projected AΣ(ν|Dt ) and AΣ(ν|Dt ) A⊤ . Note that this already depends on the inverse (noisy) kernel matrix of the training
+
+−1
+data Kξ (X(t) , X(t) ) + σϵ2 I
+∈ R(t−1)×(t−1) . Thus, the kernel matrix is already decomposed into a Cholesky factor,
+3
+which takes O(t ), and can be reused across further computations within the same iteration. This cost will not be repeatedly
+stated in the following.
+Consider the expanded formulation of AΣ(ν|Dt ) ei ∈ Rp :
+
+−1
+AΣ(ν|Dt ) ei = AKξ (Z, Z)ei − AKξ (Z, X(t) ) Kξ (X(t) , X(t) ) + σϵ2 I Kξ (Z, X(t) )⊤ ei
+
+−1
+= AKξ (Z, z(i) ) − AKξ (Z, X(t) ) Kξ (X(t) , X(t) ) + σϵ2 I Kξ (X(t) , z(i) ).
+
+Computation of AΣ(ν|Dt ) ei .
+
+By Theorem B.1 the first term of the difference AKξ (Z, z(i) ) ∈ Rp can be computed in O(p2 ), and AKξ (Z, X(t) ) ∈
+Rp×(t−1) from the second term can be computed in O(t · p2 ). The latter follows as the computation from Theorem B.1 can
+p
+be applied to each column of the cross-kernel matrix Kξ (Z, X(t) ) ∈ R2 ×(t−1) independently. This is admissible as for
+(t)
+(t)
+each row of X(t) , i.e. Xi for i = 1, ..., t − 1, it holds that Xi ∈ {0, 1}p . With pre-computed Cholesky factorization for
+the kernel matrix, the remaining components of the second term can be computed by solving a linear system, which scales
+as O(t2 ), and a matrix-vector product that scales as O(t · p). Taking all operations together, this is O(t · p2 + t2 ).
+Computation of AΣ(ν|Dt ) A⊤ .
+
+Consider the expanded formulation of AΣ(ν|Dt ) A⊤ ∈ Rp×p :
+
+−1
+AΣ(ν|Dt ) A⊤ = AKξ (Z, Z)A⊤ − AKξ (Z, X(t) ) Kξ (X(t) , X(t) ) + σϵ2 I Kξ (Z, X(t) )⊤ A⊤ .
+
+By Theorem B.2 the first term of the difference, AKξ (Z, Z)A⊤ ∈ Rp×p , can be computed in O(p4 ). AKξ (Z, X(t) ) can
+be reused from the previous step, and thus does not require additional computations. Using the pre-computed Cholesky
+factorization for the kernel matrix, the remaining components of the second term can be computed by solving a linear
+system, which scales as O(t2 · p), and a matrix-matrix product that scales as O(p2 · t). In total, this is O(p4 + t2 · p) for
+AΣ(ν|Dt ) A⊤ .
+Computation of Qi,i . Given the terms AΣ(ν|Dt ) ei and AΣ(ν|Dt ) A⊤ , we propose for a stable and efficient implementation of Qi,i , applying a Cholesky decomposition to AΣ(ν|Dt ) A⊤ , which scales as O(p3 ), then solving the associated linear
+system with the vector AΣ(ν|Dt ) ei , which scales as O(p2 ), and lastly computing a dot product in O(p).
+In summary, the EIG for a single candidate can be computed in O(p4 + t3 ), which is polynomial in p.
+
+34
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+B.4.1. V ECTORIZED C OMPUTATION .
+(t)
+
+Consider the setting in which the EIG is evaluated for a set of candidate coalitions W ⊆ {0, 1}p , yielding EIGϕ (W) :=
+(t)
+
+(EIGϕ (z(i) ))z(i) ∈W ∈ R|W| . The exhaustive evaluation over all coalitions in Z is recovered as the special case where
+|W| = 2p . For each candidate z(i) ∈ {0, 1}p , the EIG expression in Equation 6 consists of quadratic forms of the type
+e⊤
+i Mei , where M is independent of the specific candidate index i; such terms simply extract the i-th diagonal element of
+the corresponding matrix. Stacking this expression over all candidate coalitions and collecting the resulting scalars therefore
+amounts to taking the diagonal of the respective matrices restricted to W. This yields the following expression:
+h
+
+i
+
+(t)
+EIGϕ (W) ∝ C ′ + log diag Σ(ν|Dt ) + σϵ2 I W,W
+(13)
+h
+
+i
+
+− log diag Σ(ν|Dt ) + σϵ2 I − Q W,W ,
+where (·)W,W denotes restriction to the rows and columns indexed by candidates in W, diag(·) denotes the diagonal of a
+square matrix, and log(·) represents an elementwise logarithm.
+
+In our proposed implementation, we initially compute the marginal variances diag (Σ(ν|Dt ) )W,W ∈ R|W| . This scales
+as O(|W| · t2 + t3 ) across candidates and already includes the cost of Cholesky-decomposing the training kernel matrix,
+which can thus be reused in the following and is independent of the specific candidate. All remaining operations for
+variance computation
+ can be efficiently vectorized across candidates in common computational frameworks. The evaluation
+of diag (Q)W,W ∈ R|W| requires the computation and Cholesky decomposition of AΣ(ν|Dt ) A⊤ , which scales as
+O(p4 + t2 · p) and is also independent of the specific candidate and thus reusable. Then, for each candidate, AΣ(ν|Dt ) ei
+must be computed, the associated triangular system of linear equations with AΣ(ν|Dt ) A⊤ must be solved, and a dot product
+must be computed. This scales as O(|W| · p · t + p · t2 ) and can be vectorized across candidates.
+Overall, the computation across candidates scales as O(p4 + t3 + |W| · t2 ). Note that the first two additive terms, which
+dominate the computational cost in many settings, are associated with operations that are independent of the specific
+candidate and thus scale independently of |W|. All remaining candidate-specific operations can be efficiently vectorized and
+scale only in O(|W| · t2 ). Consequently, in many settings, vectorized EIG evaluation incurs only a manageable overhead
+compared to evaluating a single candidate. This even enables exhaustive EIG optimization across all candidates for small p.
+
+35
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+C. Related Work
+In the following, we provide further details on the related work discussed in Section 4. In particular, we discuss the
+relationship to popular approaches from the transductive and prediction-oriented active learning literature.
+Information-based transductive learning. Information-based transductive learning (ITL; MacKay, 1992) selects candidates based on the EIG for a set of target function values. In the SV setting, a direct application with the target set
+chosen as all coalitions corresponds to the EIG for the value function vector ν. At iteration t, this amounts to the following
+optimization problem:
+
+arg max I ν; ν ′ (z(i) ) | Dt
+i∈C
+
+= arg max Var(ν ′ (z(i) ) | Dt ).
+i∈C
+
+However, maximizing this criterion collapses to purely exploratory uncertainty sampling in our setting, i.e., selecting the
+coalition with the highest marginal posterior variance under the GP surrogate (Krause et al., 2008; Hübotter et al., 2024).
+This follows from the homoscedastic, i.i.d. Gaussian noise assumption. Thus, this criterion does not explicitly account for
+how an evaluation reduces uncertainty at other coalitions, and hence about the SVs.
+Expected predictive information gain. The expected predictive information gain (EPIG; Smith et al., 2023) is another
+popular criterion from prediction-oriented BED. A natural choice when applying it in the SV estimation setting is a uniform
+distribution over all coalitions as the target distribution p∗ . At iteration t, this amounts to the following optimization problem:
+
+
+arg max Ep∗ (j) I ν ′ (z(j) ); ν ′ (z(i) ) | Dt
+i∈C
+
+p
+
+2
+
+1 X
+= arg max − p
+H ν ′ (z(j) ) | ν ′ (z(i) ), Dt .
+2
+i∈C
+j=1
+
+Note that the sum scales exponentially in p, rendering this approach prohibitively expensive in many settings. Although this
+expectation could in principle be approximated by Monte Carlo sampling of target coalitions, we do not pursue this direction
+here, since it would introduce an additional approximation and sampling-design choice for a criterion that is already not
+directly aligned with our final quantity of interest, the SVs.
+
+36
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+D. Experiments
+In the following, we provide further details on the experiments reported in the main paper (Section 5).
+D.1. Experimental Setup
+D.1.1. I NITIAL D ESIGN
+As explained in the main paper, the initial designs for ShaplEIG consist of T0 = p + 1 coalitions drawn according to
+leverage score sampling. This size follows common practice in GP-based BED and BO, and is also a natural lower-end
+choice in our experiments, since several linear-model-based competitors (Kernel SHAP and Leverage SHAP) require at
+least p + 1 observations. The intuition here is to keep the initial design as small as possible, so that all remaining design
+points are subject to guided sequential selection. The use of leverage score sampling for the initial design is motivated by its
+state-of-the-art performance in recent benchmarks, while adding virtually no computational overhead.
+However, we did not tune these choices and, in preliminary experiments, did not observe a strong influence of the initial
+design scheme on the performance of ShaplEIG. This suggests that the strong performance of ShaplEIG is not overly
+dependent on this particular initialization strategy.
+D.1.2. G AUSSIAN P ROCESS S URROGATES
+In the following, we provide further details on the GP surrogates used.
+For our proposed method ShaplEIG and the other GP-based competitor variants, we use a zero-mean, unit-variance GP
+prior with a Hamming kernel as the covariance function (see Appendix A.1). This is consistent with standardizing the
+training data at each iteration. The kernel has characteristic lengthscale hyperparameters ξ ∈ Rp , which are optimized via
+maximum a posteriori (MAP) estimation using the L-BFGS-B optimizer (Byrd et al., 1995). We use the following prior:
+
+√ 
+√
+(14)
+ξ ∼ LogNormal µ = 2 + 0.5 log p, σ = 3 ,
+which corresponds to the default setting in BoTorch (Balandat et al., 2020). We enforce a minimum value of 10−6 for
+each lengthscale. Hyperparameters are optimized at each iteration using random initialization and restarts in case of failed
+optimization runs. For numerical stability, we assume additive zero-mean Gaussian noise with fixed variance 10−6 . This is
+the smallest value supported by BoTorch and effectively yields quasi-noiseless GPs.
+D.1.3. G AMES
+In the following, we provide further details on the games considered in our experiments.
+Feature importance. We consider global FI for the TabPFN-2.5 foundation model (Hollmann et al., 2025; Grinsztajn et al.,
+2025). As TabPFN relies on in-context learning, the value function for a feature coalition is defined as the performance (MSE
+or accuracy) on an inference set after removing absent features from both the training and inference data during a forward
+pass (Rundel et al., 2024). We use three datasets: Diabetes regression (Efron et al., 2004), Diabetes classification (Smith
+et al., 1988), and Breast Cancer (Wolberg & Mangasarian, 1990). We obtained the first two datasets from OpenML (Bischl
+et al., 2025) and the last from scikit-learn (Pedregosa et al., 2011; Buitinck et al., 2013). We rely on precomputed value
+function evaluations and provide the scripts for reproducing those in the code repository. The seeds influence the random
+splitting of the data into training and inference sets, which is done with a 70/30 ratio, and are also used for the TabPFN
+model call.
+Data valuation. For DV (Jia et al., 2019; Ghorbani & Zou, 2019; Tay et al., 2022), the achieved test-set performance of
+the Random Forest (RF; Breiman, 2001) or Gradient Boosting (GB; Friedman, 2001) algorithm on the Bike Sharing (BS;
+Fanaee-T & Gama, 2014) or California Housing (CH; Pace & Barry, 1997) dataset serves as the payoff to be attributed
+across subsets of training data as players. The games are precomputed and taken from the shapiq library. Here, the seeds
+influence the random splitting of the data into training and inference sets and the learning algorithm. Further details can be
+found in the accompanying paper (Muschalik et al., 2024).
+Hyperparameter importance. For HPI, we implement an ablation game following HyperSHAP (Wever et al., 2026,
+Section 5). Here, the value of a coalition of hyperparameters is defined as the performance obtained by setting all
+37
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+hyperparameters in the coalition to the values of a configuration of interest (e.g., an optimal configuration), while fixing
+all remaining hyperparameters to a reference configuration (e.g., a default configuration). We report experiments for
+rbv2 xgboost (Binder et al., 2020) on the Chess (Shapiro, 1983; ID: 3) and Thyroid Disease (Quinlan, 1986; ID: 38)
+tasks and for LCBench (Zimmer et al., 2021) on the Jasmine task (Guyon et al., 2019; ID: 41143). All IDs refer to
+openml.org (Bischl et al., 2025). Cheap-to-evaluate surrogate models for the relationship between hyperparameter
+configurations and performance metrics provided by Yahpo-Gym (Pfisterer et al., 2022) are used for value function
+evaluations. The compared configurations are determined by the seed used.
+Local explanation. Based on Kolpaczki et al. (2024) and shapiq (Muschalik et al., 2024), we use an LE game (Štrumbelj
+& Kononenko, 2010) to explain predictions for individual images from the ImageNet dataset (Deng et al., 2009). In this
+cooperative game, the players correspond to image components, defined as superpixels for the ResNet (He et al., 2016)
+model and patches for the vision transformer model (Dosovitskiy et al., 2021), and the value of a coalition is the predicted
+score for the target class when only the components of the coalition are retained in a model call, while all other components
+are replaced by a reference value (i.e., greyed out). Depending on the model size and accessibility, the value function
+evaluations may range from inexpensive forward passes with full model access to costly black-box queries via an inference
+API. Here, we again rely on precomputed games taken from the shapiq library.
+Furthermore, we benchmark local explanations to attribute RF predictions for single test instances to features as players using
+the linear TreeSHAP algorithm (Bifet et al., 2022). This algorithm allows efficient and exact computation of ground-truth
+SVs for tree-based models in linear as opposed to exponential time, and thus enables benchmarking in the context of large
+games where exhaustive enumeration of all coalitions is infeasible. Here, we use the tabular CorrGroups60 (Lundberg
+& Lee, 2017), NHANES (Dinh et al., 2019), and Communities and Crime (Crime; Redmond, 2011) datasets with up to
+p = 101 features, provided by the shap package (Lundberg & Lee, 2017). The seeds determine the train-test splits of the
+data, where all except for a single test instance are used for training, and also influence the training procedure of the RF
+model. Due to the low computational cost of value function evaluations and the large number of players, we do not rely on
+precomputed games for this benchmark, but instead evaluate the games online.
+D.1.4. S CALABILITY
+In the presented experiments, for games with p > 16, we do not refit the GP hyperparameters in every iteration, but instead
+follow a fixed refitting schedule. Specifically, we refit the hyperparameters in every iteration for the first 64 iterations,
+in every 8th iteration for the next 128 iterations, in every 16th iteration for the next 256 iterations, and in every 32nd
+iteration thereafter. In iterations without hyperparameter refitting, the EIG for all remaining candidates is computed using
+the GP posterior conditioned on all previously evaluated coalitions, while keeping the hyperparameters fixed at their most
+recent refitted values. In these non-refitting iterations, several quantities required for EIG computation can be updated
+efficiently: compared with the previous iteration, only one row and column need to be added to the training kernel matrix
+Kξ (X(t) , X(t) ), AKξ (Z, X(t) ) only requires adding a single column, and AKξ (Z, Z)A⊤ can be reused entirely.
+D.1.5. R EPRODUCIBILITY
+The code is publicly available at https://github.com/slds-lmu/shapleig. Please see the README.md file for
+instructions on reproducing the experimental results and on generating the precomputed games for TabPFN. All experiments
+were run on a CPU instance with 32 cores and 64 GB of RAM. The experiments were conducted using Python 3.11.13,
+Torch 2.9.1, GPyTorch 1.14, BoTorch 0.14.0, and shapiq 1.4.1.
+
+38
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+D.2. Experimental Results
+In the following, we provide more detailed results for the experiments presented in the main paper (Section 5).
+D.2.1. A BLATIONS
+We present the detailed results from the ablation study in Figure 3. For the sake of completeness, we also provide the
+experimental results with all baselines from SV approximation and the ablation in a single plot in Figure 4.
+
+39
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+10−2
+
+101
+
+10−3
+10−4
+10−5
+10−6
+
+10−3
+
+10−6
+
+10−7
+
+10−7
+0
+
+200
+400
+Evaluations
+
+0
+
+10−4
+
+10−5
+
+−4
+
+200
+400
+Evaluations
+
+200
+400
+Evaluations
+
+HPI; XGBoost; Thyroid
+
+0
+
+LE; RF; NHANES
+
+200
+400
+Evaluations
+
+LE; ViT 9; ImageNet
+
+10−2
+
+10−6
+
+10−4
+10−5
+10−6
+10−7
+
+0
+
+100
+200
+Evaluations
+
+10−6
+
+10−7
+
+MSE (Mean + SEM)
+
+−5
+
+10−3
+
+10−3
+
+MSE (Mean + SEM)
+
+10−4
+
+MSE (Mean + SEM)
+
+MSE (Mean + SEM)
+
+MSE (Mean + SEM)
+
+200
+400
+Evaluations
+
+DV; GB; Bike Sharing
+
+10−3
+
+10
+
+10−3
+
+10
+0
+
+FI; TabPFN; Diab.
+
+LE; ResNet; ImageNet
+MSE (Mean + SEM)
+
+102
+
+LE; RF; CorrGroups60
+MSE (Mean + SEM)
+
+103
+
+HPI; XGBoost; Chess
+10−5
+MSE (Mean + SEM)
+
+MSE (Mean + SEM)
+
+DV; RF; Bike Sharing
+
+104
+MSE (Mean + SEM)
+
+FI; TabPFN; Diab. Reg.
+
+10−2
+
+200
+400
+Evaluations
+
+FI; TabPFN; Breast Cancer DV; GB; Cal. Housing
+
+10−5
+10−6
+10−7
+
+10−8
+0
+
+10−4
+
+0
+
+200
+400
+Evaluations
+
+200
+400
+Evaluations
+
+HPI; LCBench; Jasmine
+
+0
+
+LE; RF; Crime
+
+200
+400
+Evaluations
+
+LE; ViT 16; ImageNet
+
+10−5
+10−6
+
+10−1
+10−2
+10−3
+10−4
+
+10
+
+MSE (Mean + SEM)
+
+10−7
+
+10
+
+−4
+
+MSE (Mean + SEM)
+
+10−6
+
+10−3
+
+MSE (Mean + SEM)
+
+10−5
+
+MSE (Mean + SEM)
+
+MSE (Mean + SEM)
+
+100
+
+1
+
+10−3
+
+10−4
+
+10−5
+0
+
+100
+200
+Evaluations
+
+0
+
+200
+400
+Evaluations
+
+0
+
+100
+200
+Evaluations
+
+200
+400
+Evaluations
+
+0
+
+200
+400
+Evaluations
+
+Figure 3. Mean squared error (MSE) between estimated and ground-truth Shapley values across all tasks and evaluation budgets, averaged
+over repetitions for ShaplEIG and the ablation baselines, with standard error of the mean (SEM) indicated.
+ShaplEIG (Ours)
+
+GP + Leverage Score Sampling
+
+40
+
+GP + US
+
+GP + Random
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+101
+
+10−3
+10−4
+10−5
+10−6
+
+LE; RF; CorrGroups60
+
+10−5
+
+10−6
+
+10−7
+
+10−7
+0
+
+200
+400
+Evaluations
+
+FI; TabPFN; Diab.
+
+DV; GB; Bike Sharing
+
+0
+
+200
+400
+Evaluations
+
+10−6
+
+10−3
+10−4
+10−5
+10−6
+10
+
+0
+
+0
+
+LE; RF; NHANES
+
+200
+400
+Evaluations
+
+LE; ViT 9; ImageNet
+
+10−5
+
+10−6
+
+10−7
+
+10−1
+
+10−2
+
+10−8
+0
+
+200
+400
+Evaluations
+
+FI; TabPFN; Breast Cancer DV; GB; Cal. Housing
+
+10−3
+10−4
+10−5
+10−6
+10−7
+
+−7
+
+100
+200
+Evaluations
+
+10−5
+
+100
+MSE (Mean + SEM)
+
+10−5
+
+10−4
+
+200
+400
+Evaluations
+
+HPI; XGBoost; Thyroid
+MSE (Mean + SEM)
+
+MSE (Mean + SEM)
+
+MSE (Mean + SEM)
+
+10
+
+200
+400
+Evaluations
+
+10−2
+
+−4
+
+10−3
+
+10−3
+
+10−4
+0
+
+10−3
+
+LE; ResNet; ImageNet
+
+10−2
+MSE (Mean + SEM)
+
+102
+
+HPI; XGBoost; Chess
+10−4
+
+MSE (Mean + SEM)
+
+103
+
+DV; RF; Bike Sharing
+10−2
+
+MSE (Mean + SEM)
+
+MSE (Mean + SEM)
+
+MSE (Mean + SEM)
+
+104
+
+MSE (Mean + SEM)
+
+FI; TabPFN; Diab. Reg.
+
+0
+
+200
+400
+Evaluations
+
+200
+400
+Evaluations
+
+HPI; LCBench; Jasmine
+
+0
+
+LE; RF; Crime
+
+200
+400
+Evaluations
+
+LE; ViT 16; ImageNet
+
+10−2
+
+10−5
+10−6
+
+10−1
+10−2
+10−3
+10−4
+10
+
+0
+
+100
+200
+Evaluations
+
+0
+
+200
+400
+Evaluations
+
+MSE (Mean + SEM)
+
+10−7
+
+10−4
+
+103
+MSE (Mean + SEM)
+
+10−6
+
+10−3
+
+MSE (Mean + SEM)
+
+MSE (Mean + SEM)
+
+MSE (Mean + SEM)
+
+10
+10−5
+
+0
+
+102
+
+101
+
+10−3
+
+10−4
+
+−5
+
+0
+
+100
+200
+Evaluations
+
+200
+400
+Evaluations
+
+0
+
+200
+400
+Evaluations
+
+Figure 4. Mean squared error (MSE) between estimated and ground-truth Shapley values across all tasks and evaluation budgets, averaged
+over repetitions for ShaplEIG and the SV approximation and ablation baselines, with standard error of the mean (SEM) indicated.
+ShaplEIG (Ours)
+
+Regression MSR
+Leverage SHAP
+Kernel SHAP
+GP + Leverage Score Sampling
+GP + US
+GP + Random
+
+41
+
+Permutation Sampling
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+D.2.2. C OMPUTATIONAL C OST
+In the following, we present plots showing the computational cost (in seconds) of GP hyperparameter optimization and
+vectorized EIG evaluation for ShaplEIG, across all tasks and evaluation budgets.
+
+42
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+LE; ResNet; ImageNet
+
+500
+
+30
+
+60
+
+400
+
+25
+
+4
+
+2
+
+GP Fitting Time (s)
+
+6
+
+5
+4
+3
+2
+
+40
+
+20
+
+GP Fitting Time (s)
+
+LE; RF; CorrGroups60
+
+80
+GP Fitting Time (s)
+
+HPI; XGBoost; Chess
+
+6
+GP Fitting Time (s)
+
+DV; RF; Bike Sharing
+
+8
+GP Fitting Time (s)
+
+FI; TabPFN; Diab. Reg.
+
+300
+200
+100
+
+20
+15
+10
+5
+
+1
+0
+
+0
+
+FI; TabPFN; Diab.
+
+DV; GB; Bike Sharing
+
+0
+
+0.6
+0.4
+
+6
+4
+2
+
+100
+200
+Evaluations
+
+0
+
+FI; TabPFN; Breast Cancer DV; GB; Cal. Housing
+
+80
+60
+40
+20
+
+0
+
+2
+
+500
+250
+
+1.5
+1.0
+
+4
+3
+2
+1
+0
+0
+
+LE; RF; Crime
+
+200
+400
+Evaluations
+
+LE; ViT 16; ImageNet
+40
+
+1000
+
+2.0
+
+5
+
+200
+400
+Evaluations
+
+GP Fitting Time (s)
+
+0.4
+
+4
+
+750
+
+HPI; LCBench; Jasmine
+GP Fitting Time (s)
+
+GP Fitting Time (s)
+
+0.6
+
+6
+
+6
+
+1000
+
+200
+400
+Evaluations
+
+8
+
+0.8
+
+200
+400
+Evaluations
+
+LE; ViT 9; ImageNet
+
+0
+
+2.5
+
+1.0
+GP Fitting Time (s)
+
+LE; RF; NHANES
+1250
+
+100
+
+200
+400
+Evaluations
+
+0
+
+1500
+
+0
+
+0
+0
+
+200
+400
+Evaluations
+
+120
+GP Fitting Time (s)
+
+GP Fitting Time (s)
+
+0.8
+
+0
+
+200
+400
+Evaluations
+
+HPI; XGBoost; Thyroid
+
+8
+
+1.0
+GP Fitting Time (s)
+
+200
+400
+Evaluations
+
+GP Fitting Time (s)
+
+0
+
+GP Fitting Time (s)
+
+200
+400
+Evaluations
+
+GP Fitting Time (s)
+
+0
+
+800
+600
+400
+200
+
+30
+20
+10
+
+0.5
+0
+
+0
+0
+
+100
+200
+Evaluations
+
+0
+
+200
+400
+Evaluations
+
+0
+
+100
+200
+Evaluations
+
+0
+200
+400
+Evaluations
+
+0
+
+200
+400
+Evaluations
+
+Figure 5. Computational cost (in seconds) of GP hyperparameter fitting across all tasks and evaluation budgets for ShaplEIG, averaged
+over repetitions and with standard error of the mean (SEM) indicated.
+
+43
+
+Bayesian Experimental Design for Shapley Value Estimation
+
+0.50
+0.45
+
+0.45
+
+0.40
+
+0.35
+
+0.80
+
+0.75
+
+0.70
+
+0.65
+
+LE; RF; CorrGroups60
+
+LE; ResNet; ImageNet
+
+8
+
+0.80
+
+EIG Computation Time (s)
+
+0.55
+
+HPI; XGBoost; Chess
+EIG Computation Time (s)
+
+0.60
+
+0.50
+
+EIG Computation Time (s)
+
+DV; RF; Bike Sharing
+EIG Computation Time (s)
+
+EIG Computation Time (s)
+
+FI; TabPFN; Diab. Reg.
+
+6
+
+4
+
+2
+
+0.75
+0.70
+0.65
+0.60
+0.55
+0.50
+
+0
+
+200
+400
+Evaluations
+
+0
+
+FI; TabPFN; Diab.
+
+200
+400
+Evaluations
+
+DV; GB; Bike Sharing
+
+0
+
+200
+400
+Evaluations
+
+100
+
+HPI; XGBoost; Thyroid
+
+200 300 400
+Evaluations
+
+500
+
+0
+
+LE; RF; NHANES
+
+LE; ViT 9; ImageNet
+
+0
+
+0.40
+0.35
+
+100
+200
+Evaluations
+
+0
+
+0.70
+0.65
+0.60
+
+200
+400
+Evaluations
+
+FI; TabPFN; Breast Cancer DV; GB; Cal. Housing
+
+0
+
+0.45
+0.40
+0.35
+
+10.0
+7.5
+5.0
+2.5
+
+0.17
+0.16
+0.15
+0.14
+
+0.30
+
+0.25
+
+0.20
+
+0.15
+
+200
+400
+Evaluations
+
+0
+
+LE; RF; Crime
+EIG Computation Time (s)
+
+0.12
+
+EIG Computation Time (s)
+
+EIG Computation Time (s)
+
+0.13
+
+0.50
+
+12.5
+
+200
+400
+Evaluations
+
+0.18
+
+0.14
+
+15.0
+
+HPI; LCBench; Jasmine
+
+0.15
+EIG Computation Time (s)
+
+0.75
+
+EIG Computation Time (s)
+
+0.18
+
+0.45
+
+0.80
+
+200
+400
+Evaluations
+
+LE; ViT 16; ImageNet
+
+30
+
+EIG Computation Time (s)
+
+0.19
+
+0.50
+
+EIG Computation Time (s)
+
+0.20
+
+EIG Computation Time (s)
+
+EIG Computation Time (s)
+
+EIG Computation Time (s)
+
+17.5
+0.21
+
+200
+400
+Evaluations
+
+25
+20
+15
+10
+5
+
+0.9
+
+0.8
+
+0.7
+
+0.6
+0
+
+100
+200
+Evaluations
+
+0
+
+200
+400
+Evaluations
+
+0
+
+100
+200
+Evaluations
+
+100
+
+200
+300
+400
+Evaluations
+
+500
+
+0
+
+200
+400
+Evaluations
+
+Figure 6. Computational cost (in seconds) of vectorized EIG evaluation across all tasks and evaluation budgets for ShaplEIG, averaged
+over repetitions and with the standard error of the mean (SEM) indicated.
+
+44
+
+

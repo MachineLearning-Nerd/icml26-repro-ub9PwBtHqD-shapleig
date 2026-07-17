@@ -1,0 +1,33 @@
+{
+  "space_id": "DineshAI/ub9PwBtHqD",
+  "emoji": "📡",
+  "created_at": "2026-07-17T08:30:00+00:00",
+  "paper": {
+    "arxiv_id": "2606.02247",
+    "openreview_id": "ub9PwBtHqD"
+  },
+  "tags": [
+    "icml2026-repro",
+    "paper-ub9PwBtHqD"
+  ],
+  "autosync": true,
+  "private": false,
+  "title": "Repro - ShaplEIG",
+  "last_page": "conclusion",
+  "local_dashboards": {},
+  "artifacts_bucket": "DineshAI/ub9PwBtHqD-artifacts",
+  "local_path_artifacts": [
+    {
+      "path": "outputs/c2_greedy_vs_random.csv",
+      "abs_path": "/home/dineshai/Drives/Code/AllCode/ReproduceICML/papers/icml26-repro-ub9PwBtHqD-shapleig/outputs/c2_greedy_vs_random.csv",
+      "size": 2380,
+      "artifact_type": "dataset"
+    },
+    {
+      "path": "outputs/c1_closed_form_eig.csv",
+      "abs_path": "/home/dineshai/Drives/Code/AllCode/ReproduceICML/papers/icml26-repro-ub9PwBtHqD-shapleig/outputs/c1_closed_form_eig.csv",
+      "size": 577,
+      "artifact_type": "dataset"
+    }
+  ]
+}
