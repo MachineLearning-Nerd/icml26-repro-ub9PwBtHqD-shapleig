@@ -7,3 +7,4 @@ docs/paper.pdf
 .trackio/media/
 .trackio/logbook/.serve.log
 .trackio/**/*.log
+data/vit9/

@@ -10,10 +10,10 @@
     "icml2026-repro",
     "paper-ub9PwBtHqD"
   ],
-  "autosync": true,
+  "autosync": false,
   "private": false,
   "title": "Repro - ShaplEIG",
-  "last_page": "conclusion",
+  "last_page": "claim-2-greedy-acquisition",
   "local_dashboards": {},
   "artifacts_bucket": "DineshAI/ub9PwBtHqD-artifacts"
 }

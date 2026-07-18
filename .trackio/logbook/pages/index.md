@@ -9,3 +9,4 @@
 | [Methods & environment](#/methods-environment) |
 | [Negative controls](#/negative-controls) |
 | [Conclusion](#/conclusion) |
+| [Claim 2 — Real ImageNet benchmark](#/claim-2-real-imagenet-benchmark) |

@@ -1,0 +1,36 @@
+{
+  "upstream": "slds-lmu/shapleig@162ce44fe380c7c11b959fc85206b5dcdeddff58",
+  "budgets": [
+    {
+      "replicate": 1,
+      "budget": 16,
+      "leverage_max_abs_diff": 0.0,
+      "regression_msr_max_abs_diff": 0.0
+    },
+    {
+      "replicate": 1,
+      "budget": 32,
+      "leverage_max_abs_diff": 0.0,
+      "regression_msr_max_abs_diff": 0.0
+    },
+    {
+      "replicate": 1,
+      "budget": 64,
+      "leverage_max_abs_diff": 0.0,
+      "regression_msr_max_abs_diff": 0.0
+    },
+    {
+      "replicate": 12,
+      "budget": 16,
+      "leverage_max_abs_diff": 0.0,
+      "regression_msr_max_abs_diff": 0.0
+    },
+    {
+      "replicate": 16,
+      "budget": 16,
+      "leverage_max_abs_diff": 0.0,
+      "regression_msr_max_abs_diff": 0.0
+    }
+  ],
+  "pass": true
+}

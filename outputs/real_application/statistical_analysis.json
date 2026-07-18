@@ -1,0 +1,139 @@
+{
+  "analysis": "paired mean log10(MSE) across five matched budgets per official game",
+  "replicates": 30,
+  "budgets": [
+    16,
+    24,
+    32,
+    48,
+    64
+  ],
+  "bootstrap_resamples": 20000,
+  "comparisons": {
+    "ShaplEIG": {
+      "KernelSHAP": {
+        "geometric_mean_mse_ratio": 0.2194353263117793,
+        "bootstrap_ratio_95ci": [
+          0.09946901054042531,
+          0.4169121573850095
+        ],
+        "replicate_auc_win_fraction": 0.8666666666666667,
+        "wilcoxon_two_sided_p": 4.7124922275543213e-07
+      },
+      "LeverageSHAP": {
+        "geometric_mean_mse_ratio": 0.4035078800215336,
+        "bootstrap_ratio_95ci": [
+          0.2838443650244,
+          0.5563760329334738
+        ],
+        "replicate_auc_win_fraction": 0.8666666666666667,
+        "wilcoxon_two_sided_p": 6.917864084243774e-06
+      },
+      "PermutationSampling": {
+        "geometric_mean_mse_ratio": 0.21187348709640144,
+        "bootstrap_ratio_95ci": [
+          0.15921217889599734,
+          0.2745255462991357
+        ],
+        "replicate_auc_win_fraction": 1.0,
+        "wilcoxon_two_sided_p": 1.862645149230957e-09
+      },
+      "RegressionMSR": {
+        "geometric_mean_mse_ratio": 0.5777833720024328,
+        "bootstrap_ratio_95ci": [
+          0.4569311067938218,
+          0.7244006245701698
+        ],
+        "replicate_auc_win_fraction": 0.8,
+        "wilcoxon_two_sided_p": 4.968419671058655e-05
+      },
+      "SVARM": {
+        "geometric_mean_mse_ratio": 0.18565941021315124,
+        "bootstrap_ratio_95ci": [
+          0.13007975613316689,
+          0.25645054789430805
+        ],
+        "replicate_auc_win_fraction": 1.0,
+        "wilcoxon_two_sided_p": 1.862645149230957e-09
+      },
+      "UnbiasedKernelSHAP": {
+        "geometric_mean_mse_ratio": 0.1472903637358499,
+        "bootstrap_ratio_95ci": [
+          0.10087512027348758,
+          0.21128213651799865
+        ],
+        "replicate_auc_win_fraction": 1.0,
+        "wilcoxon_two_sided_p": 1.862645149230957e-09
+      }
+    },
+    "ShaplEIG-fixed": {
+      "KernelSHAP": {
+        "geometric_mean_mse_ratio": 0.14085964997840286,
+        "bootstrap_ratio_95ci": [
+          0.06422152348573638,
+          0.2596887436799585
+        ],
+        "replicate_auc_win_fraction": 0.9666666666666667,
+        "wilcoxon_two_sided_p": 9.313225746154785e-09
+      },
+      "LeverageSHAP": {
+        "geometric_mean_mse_ratio": 0.25901927323499285,
+        "bootstrap_ratio_95ci": [
+          0.20380404249460965,
+          0.33343360207452466
+        ],
+        "replicate_auc_win_fraction": 0.9666666666666667,
+        "wilcoxon_two_sided_p": 9.313225746154785e-09
+      },
+      "PermutationSampling": {
+        "geometric_mean_mse_ratio": 0.13600556361512658,
+        "bootstrap_ratio_95ci": [
+          0.11259158627554966,
+          0.16924352642471274
+        ],
+        "replicate_auc_win_fraction": 1.0,
+        "wilcoxon_two_sided_p": 1.862645149230957e-09
+      },
+      "RegressionMSR": {
+        "geometric_mean_mse_ratio": 0.37088997889049174,
+        "bootstrap_ratio_95ci": [
+          0.28432570532818463,
+          0.48769011865165907
+        ],
+        "replicate_auc_win_fraction": 0.9,
+        "wilcoxon_two_sided_p": 4.7124922275543213e-07
+      },
+      "SVARM": {
+        "geometric_mean_mse_ratio": 0.1191782561968345,
+        "bootstrap_ratio_95ci": [
+          0.0955290871864954,
+          0.1481946965870943
+        ],
+        "replicate_auc_win_fraction": 1.0,
+        "wilcoxon_two_sided_p": 1.862645149230957e-09
+      },
+      "UnbiasedKernelSHAP": {
+        "geometric_mean_mse_ratio": 0.09454844591223753,
+        "bootstrap_ratio_95ci": [
+          0.07335206989067102,
+          0.12182990369739054
+        ],
+        "replicate_auc_win_fraction": 1.0,
+        "wilcoxon_two_sided_p": 1.862645149230957e-09
+      }
+    }
+  },
+  "mean_rank_over_replicate_budget_cells": {
+    "ShaplEIG-fixed": 2.5533333333333332,
+    "GP-uncertainty": 3.533333333333333,
+    "ShaplEIG": 4.006666666666667,
+    "GP-LeverageSHAP": 4.6866666666666665,
+    "GP-random": 4.866666666666666,
+    "RegressionMSR": 5.486666666666666,
+    "LeverageSHAP": 6.56,
+    "KernelSHAP": 6.8933333333333335,
+    "PermutationSampling": 8.773333333333333,
+    "SVARM": 9.106666666666667,
+    "UnbiasedKernelSHAP": 9.533333333333333
+  }
+}

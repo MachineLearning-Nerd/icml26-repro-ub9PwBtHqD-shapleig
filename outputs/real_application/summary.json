@@ -1,0 +1,122 @@
+{
+  "application": "ImageNet local explanation with Vision Transformer and 9 image patches",
+  "source": "shapiq@799cfd0f2c32f17446130247a7ac3519e68cce82",
+  "replicates": 30,
+  "coalitions_per_game": 512,
+  "budgets": [
+    16,
+    24,
+    32,
+    48,
+    64
+  ],
+  "methods": [
+    "GP-LeverageSHAP",
+    "GP-random",
+    "GP-uncertainty",
+    "KernelSHAP",
+    "LeverageSHAP",
+    "PermutationSampling",
+    "RegressionMSR",
+    "SVARM",
+    "ShaplEIG",
+    "ShaplEIG-fixed",
+    "UnbiasedKernelSHAP"
+  ],
+  "aggregate_mean_mse": {
+    "16": {
+      "GP-LeverageSHAP": 0.015764530385733524,
+      "GP-random": 0.011200783115109228,
+      "GP-uncertainty": 0.007896249884109738,
+      "KernelSHAP": 798120975264.3488,
+      "LeverageSHAP": 0.02649665959376967,
+      "PermutationSampling": 0.036133423425745215,
+      "RegressionMSR": 0.01630349153866154,
+      "SVARM": 0.023249530990667993,
+      "ShaplEIG": 0.01302994910278865,
+      "ShaplEIG-fixed": 0.007983914641417329,
+      "UnbiasedKernelSHAP": 0.06222682722000368
+    },
+    "24": {
+      "GP-LeverageSHAP": 0.004634981357261114,
+      "GP-random": 0.0072469244200787436,
+      "GP-uncertainty": 0.005439877345583886,
+      "KernelSHAP": 0.02267646257527319,
+      "LeverageSHAP": 0.02267646876939224,
+      "PermutationSampling": 0.020749131275912092,
+      "RegressionMSR": 0.009619149814746345,
+      "SVARM": 0.02008741220968886,
+      "ShaplEIG": 0.005996519289415542,
+      "ShaplEIG-fixed": 0.003565303232763948,
+      "UnbiasedKernelSHAP": 0.03492760683846953
+    },
+    "32": {
+      "GP-LeverageSHAP": 0.0037052028089607923,
+      "GP-random": 0.004751553401605342,
+      "GP-uncertainty": 0.0031627910259236043,
+      "KernelSHAP": 0.008681230172665363,
+      "LeverageSHAP": 0.008681229795072897,
+      "PermutationSampling": 0.013167909415843452,
+      "RegressionMSR": 0.006109629584483374,
+      "SVARM": 0.0171814905556452,
+      "ShaplEIG": 0.004182508771080401,
+      "ShaplEIG-fixed": 0.002287735606885891,
+      "UnbiasedKernelSHAP": 0.02220842541879836
+    },
+    "48": {
+      "GP-LeverageSHAP": 0.0030497207241026838,
+      "GP-random": 0.0026655162511900737,
+      "GP-uncertainty": 0.002010758092270602,
+      "KernelSHAP": 0.004846775527449136,
+      "LeverageSHAP": 0.004846775765034161,
+      "PermutationSampling": 0.009107093189858884,
+      "RegressionMSR": 0.003473406531149239,
+      "SVARM": 0.012642482903441643,
+      "ShaplEIG": 0.0021430096778199204,
+      "ShaplEIG-fixed": 0.0009828267205843324,
+      "UnbiasedKernelSHAP": 0.010232189175197791
+    },
+    "64": {
+      "GP-LeverageSHAP": 0.0016768209890888454,
+      "GP-random": 0.0018283714707935418,
+      "GP-uncertainty": 0.0012338635188905809,
+      "KernelSHAP": 0.0025043747946126497,
+      "LeverageSHAP": 0.0025043747473577544,
+      "PermutationSampling": 0.005835264059582733,
+      "RegressionMSR": 0.0016074229374564441,
+      "SVARM": 0.006935687901010737,
+      "ShaplEIG": 0.0011481689029074643,
+      "ShaplEIG-fixed": 0.0004811968040721255,
+      "UnbiasedKernelSHAP": 0.0064595206536334085
+    }
+  },
+  "shapleig_vs_sota": {
+    "KernelSHAP": {
+      "win_fraction": 0.7466666666666667,
+      "mean_mse_ratio": 0.7235059273867376
+    },
+    "LeverageSHAP": {
+      "win_fraction": 0.7133333333333334,
+      "mean_mse_ratio": 0.798905113664054
+    },
+    "RegressionMSR": {
+      "win_fraction": 0.7,
+      "mean_mse_ratio": 0.9203665617944904
+    },
+    "UnbiasedKernelSHAP": {
+      "win_fraction": 0.92,
+      "mean_mse_ratio": 0.30914456934365175
+    },
+    "SVARM": {
+      "win_fraction": 0.9,
+      "mean_mse_ratio": 0.34853323123996793
+    },
+    "PermutationSampling": {
+      "win_fraction": 0.9333333333333333,
+      "mean_mse_ratio": 0.34710041517846085
+    }
+  },
+  "elapsed_seconds": 516.4961989191361,
+  "data_integrity": "PASS",
+  "realized_errors_not_posterior_proxy": true
+}

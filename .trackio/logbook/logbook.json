@@ -11,7 +11,7 @@
     "icml2026-repro",
     "paper-ub9PwBtHqD"
   ],
-  "updated_at": "2026-07-17T05:50:11+00:00",
+  "updated_at": "2026-07-18T10:37:51+00:00",
   "root": {
     "slug": "index",
     "title": "Repro - ShaplEIG (Bayesian Design for Shapley)",
@@ -46,9 +46,15 @@
         "title": "Conclusion",
         "file": "pages/conclusion/page.md",
         "children": []
+      },
+      {
+        "slug": "claim-2-real-imagenet-benchmark",
+        "title": "Claim 2 — Real ImageNet benchmark",
+        "file": "pages/claim-2-real-imagenet-benchmark/page.md",
+        "children": []
       }
     ]
   },
-  "agent_view_tokens": 1802,
-  "revision": "1784267411305171057"
+  "agent_view_tokens": 3908,
+  "revision": "1784371071520826384"
 }

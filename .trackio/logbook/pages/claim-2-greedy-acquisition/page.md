@@ -12,3 +12,12 @@ At matched budgets (p∈{3,4,5}, budget p+1 coalitions), greedy-EIG vs random ac
 - **Expected per-coordinate MSE** trace(A Σ_post Aᵀ)/p (deterministic given the design) lower for greedy in **72%** of trials.
 
 These are the design-quality metrics the EIG directly optimizes; realized single-draw MSE at very small budgets is noisy (≈44%), as expected — the variance advantage is captured by the deterministic trace. The greedy BAD policy therefore concentrates evaluations on the most informative coalitions for the Shapley value.
+
+
+---
+<!-- trackio-cell
+{"type": "markdown", "id": "cell_167269af8eba", "created_at": "2026-07-18T10:37:51+00:00", "title": "Superseded evidence"}
+-->
+## Superseded by the full-scale repair
+
+The original p=3–5 Gaussian/random comparison below is retained as historical diagnostic evidence only. It did **not** establish C2. The claim conclusion now rests exclusively on the 30-game ImageNet/ViT benchmark, six SOTA baselines, and realized MSE reported on the **Claim 2 — Real ImageNet benchmark** page.
