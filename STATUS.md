@@ -1,9 +1,10 @@
 # STATUS — ShaplEIG (`ub9PwBtHqD`)
 
-**Session:** perfect-score campaign. **Last updated:** 2026-07-18. **State:** C2 full-scale repair passed the publish gate; publishing.
+**Session:** perfect-score campaign. **Last updated:** 2026-07-18. **State:** full-scale C2 repair published; under official verdict.
 
-GitHub: `MachineLearning-Nerd/icml26-repro-ub9PwBtHqD-shapleig` at public SHA `ec0b99a`.
-HF Space (queued): `DineshAI/ub9PwBtHqD`.
+GitHub: `MachineLearning-Nerd/icml26-repro-ub9PwBtHqD-shapleig` at public SHA
+`4c19e53` (implementation `1d9b620`). HF Space: `DineshAI/ub9PwBtHqD` at
+exact SHA `69a5618000de4028d81d357542710df9d19145fb`.
 
 ## Source
 - arXiv 2606.02247. Clean-room from PDF. Linear-Gaussian Shapley BED model.
@@ -21,5 +22,6 @@ HF Space (queued): `DineshAI/ub9PwBtHqD`.
 - **18/18 tests pass**; 14 approach/ablation routes executed.
 
 ## Next
-- Push GitHub and sync `DineshAI/ub9PwBtHqD`, then poll the exact Space SHA for
-  the official 4/4 verdict.
+- Poll the exact Space SHA for the official 4/4 verdict. The current dataset
+  still contains the prior `e42a5ea` 3/4 verdict and must not be treated as the
+  result of this repair.
