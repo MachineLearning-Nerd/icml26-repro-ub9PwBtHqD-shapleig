@@ -11,7 +11,7 @@
     "icml2026-repro",
     "paper-ub9PwBtHqD"
   ],
-  "updated_at": "2026-07-18T10:37:51+00:00",
+  "updated_at": "2026-07-18T10:44:09+00:00",
   "root": {
     "slug": "index",
     "title": "Repro - ShaplEIG (Bayesian Design for Shapley)",
@@ -55,6 +55,6 @@
       }
     ]
   },
-  "agent_view_tokens": 3908,
-  "revision": "1784371071520826384"
+  "agent_view_tokens": 4119,
+  "revision": "1784371449147930227"
 }

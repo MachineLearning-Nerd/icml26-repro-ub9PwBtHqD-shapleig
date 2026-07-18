@@ -222,7 +222,7 @@ Wrote c1_closed_form_eig.csv, c2_greedy_vs_random.csv, summary.json
 -->
 **📦 Artifact** `outputs/c2_greedy_vs_random.csv` · dataset · 2.4 kB
 
-https://huggingface.co/datasets/DineshAI/ub9PwBtHqD-artifacts/resolve/main/outputs/c2_greedy_vs_random.csv
+https://huggingface.co/buckets/DineshAI/ub9PwBtHqD-artifacts#logbook-files/outputs/c2_greedy_vs_random.csv
 
 
 ---
@@ -231,7 +231,7 @@ https://huggingface.co/datasets/DineshAI/ub9PwBtHqD-artifacts/resolve/main/outpu
 -->
 **📦 Artifact** `outputs/c1_closed_form_eig.csv` · dataset · 577 B
 
-https://huggingface.co/datasets/DineshAI/ub9PwBtHqD-artifacts/resolve/main/outputs/c1_closed_form_eig.csv
+https://huggingface.co/buckets/DineshAI/ub9PwBtHqD-artifacts#logbook-files/outputs/c1_closed_form_eig.csv
 
 
 ---

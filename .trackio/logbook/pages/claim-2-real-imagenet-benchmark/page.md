@@ -538,7 +538,7 @@ replicate 30/30 complete
 -->
 **📦 Artifact** `outputs/real_application/vit9_realized_mse.csv` · dataset · 0.3 MB
 
-https://huggingface.co/datasets/DineshAI/ub9PwBtHqD-artifacts/resolve/main/outputs/real_application/vit9_realized_mse.csv
+https://huggingface.co/buckets/DineshAI/ub9PwBtHqD-artifacts#logbook-files/outputs/real_application/vit9_realized_mse.csv
 
 
 ---
@@ -861,7 +861,7 @@ wrote 55 aggregate rows and 2 plots
 -->
 **📦 Artifact** `outputs/real_application/aggregate_mse.csv` · dataset · 8.3 kB
 
-https://huggingface.co/datasets/DineshAI/ub9PwBtHqD-artifacts/resolve/main/outputs/real_application/aggregate_mse.csv
+https://huggingface.co/buckets/DineshAI/ub9PwBtHqD-artifacts#logbook-files/outputs/real_application/aggregate_mse.csv
 
 
 ---
