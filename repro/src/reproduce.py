@@ -109,6 +109,7 @@ def main() -> None:
     run(sys.executable, "repro/src/verify_upstream_parity.py")
     run(sys.executable, "repro/src/run_complexity_claim.py")
     run(sys.executable, "repro/src/run_claim5_audit.py")
+    run(sys.executable, "repro/src/run_scope_audit.py")
 
     result = verify_cumulative_results()
     claim_1 = json.loads(
@@ -119,6 +120,11 @@ def main() -> None:
         (ROOT / ".openresearch" / "artifacts" / "claim_5" / "result.json").read_text()
     )
     result["claim_5_overhead"] = claim_5["verdict"]
+    scope_audit = json.loads(
+        (ROOT / ".openresearch" / "artifacts" / "claim_2" / "result.json").read_text()
+    )
+    result["claim_2_scope"] = scope_audit["claim_2_verdict"]
+    result["claim_3_full_scale"] = scope_audit["claim_3_verdict"]
     result.update(
         {
             "git_sha": subprocess.check_output(

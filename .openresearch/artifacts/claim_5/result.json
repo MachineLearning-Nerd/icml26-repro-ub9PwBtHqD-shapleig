@@ -1,0 +1,81 @@
+{
+  "claim": "Figures 5-6 per-iteration computational overhead",
+  "verdict": "BLOCKED",
+  "source": {
+    "git_sha": "162ce44fe380c7c11b959fc85206b5dcdeddff58",
+    "pyproject_sha256": "3a840a9dc6e876f7d442a56d65b385c43971279334f9473619ba18f425faf878",
+    "poetry_lock_sha256": "faa76605a00528255840634fac74caa1cb975c79546705158d7d4a627faed2c0",
+    "experiment_runner_sha256": "ac7da7040f54be7c5973e9f44e04dee8dd91d1611c9073d36e6ee452c2659108",
+    "acquisition_functions_sha256": "42039d0dbe871e9f9a9b6e582fc53c96b32ff3999f615d86d2a84e9ed0b2c219",
+    "gp_surrogate_sha256": "147748a61e4672956e344ac23a8304fa2e3fcb17bb0afbb6146378844f887d41"
+  },
+  "paper_scope": {
+    "task_count": 15,
+    "task_players_in_table_order": [10, 8, 8, 10, 10, 10, 16, 16, 8, 60, 79, 101, 14, 9, 16],
+    "maximum_players": 101,
+    "maximum_budget": 512,
+    "reported_small_game_hp_fit_upper_seconds": 120,
+    "reported_large_game_hp_fit_upper_seconds": 1500,
+    "reported_small_game_eig_upper_seconds": 1,
+    "reported_large_game_eig_upper_seconds": 30,
+    "timed_blocks": ["gp.fit()", "EIGFunctionProperty(candidate_set, ...)"]
+  },
+  "prerequisite_audit": {
+    "python_contract": {
+      "author": ">=3.11,<3.12",
+      "frozen_reproduction": "==3.12.11",
+      "compatible": false
+    },
+    "module_audit": {
+      "required": ["torch", "gpytorch", "botorch", "hydra", "yahpo_gym", "tabpfn"],
+      "available": [],
+      "missing": ["torch", "gpytorch", "botorch", "hydra", "yahpo_gym", "tabpfn"]
+    },
+    "author_locked_versions": {
+      "torch": "2.9.1",
+      "botorch": "0.14.0",
+      "gpytorch": "1.14",
+      "hydra-core": "1.3.2",
+      "yahpo-gym": "1.0.2",
+      "tabpfn": "6.2.0",
+      "shapiq": "1.4.1",
+      "numpy": "1.26.4",
+      "scipy": "1.16.3"
+    },
+    "required_external_data": {
+      "paths": {
+        "yahpo_metadata": "data/yahpo_surrogates/yahpo_data",
+        "tabpfn_tid15": "data/shapiq_games/tabpfn/tid15",
+        "tabpfn_tid37": "data/shapiq_games/tabpfn/tid37",
+        "tabpfn_diabetes_regression": "data/shapiq_games/tabpfn/tiddiabreg"
+      },
+      "present": {
+        "yahpo_metadata": false,
+        "tabpfn_tid15": false,
+        "tabpfn_tid37": false,
+        "tabpfn_diabetes_regression": false
+      },
+      "all_present": false
+    }
+  },
+  "blocking_reasons": [
+    "author and frozen Python contracts are incompatible",
+    "missing author runtime modules: torch, gpytorch, botorch, hydra, yahpo_gym, tabpfn",
+    "manually provisioned author task data are incomplete"
+  ],
+  "non_equivalent_diagnostic": {
+    "description": "single-candidate NumPy ESP computation at p=101",
+    "seconds": 2.839052958006505,
+    "note": "This is not the paper's vectorized 1024-candidate per-iteration time.",
+    "treated_as_claim_evidence": false
+  },
+  "negative_control": {
+    "mutation": "mark Python, modules, and manual data as available",
+    "unblocked_mutation_rejected": true
+  },
+  "environment": {
+    "fixed_command": "uv sync --frozen && uv run python repro/src/reproduce.py",
+    "python": "3.12.11",
+    "git_sha": "9a7dd14ee71d24f618bef9b0cd041ef833dee190"
+  }
+}

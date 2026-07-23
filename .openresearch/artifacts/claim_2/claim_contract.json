@@ -1,0 +1,14 @@
+{
+  "claim_id": 2,
+  "source": {
+    "paper": "arXiv:2606.02247v1",
+    "anchors": ["S5.T1", "S5.SS1"],
+    "source_sha256": "81809d39fa180bab590aa3eb2c3a0c37ac3d17df20c91ac47dc4f805c981dff1"
+  },
+  "contract": {
+    "verified": "All 15 exact tasks across all four families execute with the paper's repetitions and budgets through 512.",
+    "falsified": "An exact task/configuration contradicts the stated scope.",
+    "blocked": "At least one exact task input or runtime is inaccessible under the immutable environment."
+  },
+  "allowed_verdicts": ["VERIFIED", "FALSIFIED", "BLOCKED"]
+}
