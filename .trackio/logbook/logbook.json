@@ -11,7 +11,7 @@
     "icml2026-repro",
     "paper-ub9PwBtHqD"
   ],
-  "updated_at": "2026-07-23T09:45:00+00:00",
+  "updated_at": "2026-07-23T12:22:24+00:00",
   "root": {
     "slug": "index",
     "title": "Repro - ShaplEIG (Bayesian Design for Shapley)",
@@ -35,6 +35,12 @@
             "children": []
           },
           {
+            "slug": "claim-2-partial-executed-scope",
+            "title": "Claim 2 — Four-task executed subset",
+            "file": "pages/claim-2-partial-executed-scope/page.md",
+            "children": []
+          },
+          {
             "slug": "claim-3-data-valuation-counterexample",
             "title": "Claim 3 — Data-valuation counterexamples",
             "file": "pages/claim-3-data-valuation-counterexample/page.md",
@@ -50,6 +56,12 @@
             "slug": "claim-5-overhead",
             "title": "Claim 5 — Overhead blocker",
             "file": "pages/claim-5-overhead/page.md",
+            "children": []
+          },
+          {
+            "slug": "claim-5-partial-timing",
+            "title": "Claim 5 — Decomposed timing subset",
+            "file": "pages/claim-5-partial-timing/page.md",
             "children": []
           },
           {

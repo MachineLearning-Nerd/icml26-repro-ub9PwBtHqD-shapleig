@@ -1,0 +1,8 @@
+{
+  "mutation": "delete one task/replicate/archive timing cell",
+  "detected": true,
+  "errors": [
+    "expected 80 rows, got 79",
+    "task/replicate/archive grid mismatch"
+  ]
+}

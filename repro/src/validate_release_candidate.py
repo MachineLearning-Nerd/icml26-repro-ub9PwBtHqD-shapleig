@@ -12,6 +12,9 @@ CANDIDATE = ROOT / ".trackio" / "logbook"
 PROTECTED_MANIFEST = (
     ROOT / ".openresearch" / "protected" / "judged_space_85ca787_manifest.sha256"
 )
+PUBLISHED_MANIFEST = (
+    ROOT / ".openresearch" / "protected" / "published_space_5b88f06_manifest.sha256"
+)
 RELEASE = ROOT / ".openresearch" / "release"
 ALLOWLIST = RELEASE / "hf_upload_allowlist.txt"
 UPLOAD_MANIFEST = RELEASE / "hf_upload_manifest.sha256"
@@ -29,11 +32,17 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def main() -> None:
-    protected: dict[str, str] = {}
-    for line in PROTECTED_MANIFEST.read_text().splitlines():
+def read_manifest(path: Path) -> dict[str, str]:
+    manifest: dict[str, str] = {}
+    for line in path.read_text().splitlines():
         digest, relative = line.split(maxsplit=1)
-        protected[relative.removeprefix("./")] = digest
+        manifest[relative.removeprefix("./")] = digest
+    return manifest
+
+
+def main() -> None:
+    protected = read_manifest(PROTECTED_MANIFEST)
+    published = read_manifest(PUBLISHED_MANIFEST)
     candidate_paths = {
         path.relative_to(CANDIDATE).as_posix(): path
         for path in CANDIDATE.rglob("*")
@@ -44,6 +53,14 @@ def main() -> None:
     changed_old = sorted(
         relative
         for relative, expected in protected.items()
+        if relative != "logbook.json"
+        and relative in candidate_paths
+        and sha256(candidate_paths[relative]) != expected
+    )
+    missing_published = sorted(set(published) - set(candidate_paths))
+    changed_published = sorted(
+        relative
+        for relative, expected in published.items()
         if relative != "logbook.json"
         and relative in candidate_paths
         and sha256(candidate_paths[relative]) != expected
@@ -112,6 +129,12 @@ def main() -> None:
         "missing_old_paths": missing,
         "unchanged_old_paths_except_additive_index": not changed_old,
         "changed_old_paths_except_logbook_json": changed_old,
+        "published_revision": "5b88f06d7075f750daa29aaf387dc70a341e0ebd",
+        "published_path_count": len(published),
+        "published_file_set_is_subset": not missing_published,
+        "missing_published_paths": missing_published,
+        "unchanged_published_paths_except_logbook_json": not changed_published,
+        "changed_published_paths_except_logbook_json": changed_published,
         "logbook_json_modified_additively": not missing_historical_references,
         "missing_historical_page_references": missing_historical_references,
         "upload_path_count": len(allowlist),
@@ -130,6 +153,8 @@ def main() -> None:
     failures = [
         missing,
         changed_old,
+        missing_published,
+        changed_published,
         missing_historical_references,
         allowlist_mismatch,
         unsafe_allowlist,

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="420" viewBox="0 0 900 420" role="img" aria-labelledby="title desc">
+  <title id="title">Claim 5 maximum measured component times</title>
+  <desc id="desc">Maximum GP fit time was 0.678 seconds and maximum EIG time was 0.421 seconds across 80 partial timing cells.</desc>
+  <rect width="900" height="420" fill="#fbfaf7"/>
+  <style>
+    text{font-family:ui-sans-serif,system-ui,sans-serif;fill:#17202a}
+    .title{font-size:24px;font-weight:650}.label{font-size:20px}.value{font-size:19px;font-weight:650}
+    .note{font-size:17px;fill:#52606d}.bar1{fill:#246b78}.bar2{fill:#d18b35}.axis{stroke:#94a3ad;stroke-width:1}
+  </style>
+  <text x="42" y="48" class="title">Claim 5: decomposed exact-task timing subset</text>
+  <line x1="240" y1="320" x2="810" y2="320" class="axis"/>
+  <text x="42" y="145" class="label">Five-restart GP fit</text>
+  <rect x="240" y="112" width="475" height="48" rx="7" class="bar1"/>
+  <text x="730" y="143" class="value">0.678 s max</text>
+  <text x="42" y="245" class="label">Vectorized EIG grid</text>
+  <rect x="240" y="212" width="295" height="48" rx="7" class="bar2"/>
+  <text x="550" y="243" class="value">0.421 s max</text>
+  <text x="240" y="350" class="note">0 s</text>
+  <text x="765" y="350" class="note">0.8 s</text>
+  <text x="42" y="390" class="note">80 cells · four public tasks · p=9–10 · archive sizes 16–64 · complete grids up to 1,024</text>
+</svg>

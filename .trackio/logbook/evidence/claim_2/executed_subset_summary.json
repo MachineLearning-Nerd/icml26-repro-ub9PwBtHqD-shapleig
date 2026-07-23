@@ -1,0 +1,238 @@
+{
+  "assessment": "TOY",
+  "full_claim_verdict": "BLOCKED",
+  "paper_scope": {
+    "tasks": 15,
+    "families": 4,
+    "maximum_budget": 512
+  },
+  "executed_scope": {
+    "tasks": 4,
+    "task_ids": [
+      "dv_gb_bike_sharing",
+      "dv_gb_california_housing",
+      "dv_rf_bike_sharing",
+      "le_vit9_imagenet"
+    ],
+    "families": 2,
+    "family_ids": [
+      "data_valuation",
+      "local_explanation"
+    ],
+    "players": [
+      9,
+      10
+    ],
+    "replicates_per_task": 30,
+    "budgets": [
+      16,
+      24,
+      32,
+      48,
+      64
+    ],
+    "maximum_budget": 64,
+    "methods": [
+      "ShaplEIG"
+    ],
+    "raw_rows": 600,
+    "distinct_game_hashes": 120
+  },
+  "by_task_budget": [
+    {
+      "task_id": "dv_gb_bike_sharing",
+      "family": "data_valuation",
+      "players": 10,
+      "budget": 16,
+      "replicates": 30,
+      "mean_mse": 0.011582600078624383,
+      "sem_mse": 0.0008877312121500538
+    },
+    {
+      "task_id": "dv_gb_bike_sharing",
+      "family": "data_valuation",
+      "players": 10,
+      "budget": 24,
+      "replicates": 30,
+      "mean_mse": 0.006646584172977322,
+      "sem_mse": 0.0008136334848710315
+    },
+    {
+      "task_id": "dv_gb_bike_sharing",
+      "family": "data_valuation",
+      "players": 10,
+      "budget": 32,
+      "replicates": 30,
+      "mean_mse": 0.0024287825905455977,
+      "sem_mse": 0.0005967731324321806
+    },
+    {
+      "task_id": "dv_gb_bike_sharing",
+      "family": "data_valuation",
+      "players": 10,
+      "budget": 48,
+      "replicates": 30,
+      "mean_mse": 0.0004541288059021197,
+      "sem_mse": 0.0003194042123836837
+    },
+    {
+      "task_id": "dv_gb_bike_sharing",
+      "family": "data_valuation",
+      "players": 10,
+      "budget": 64,
+      "replicates": 30,
+      "mean_mse": 1.859018185120664e-05,
+      "sem_mse": 1.3866760124545895e-05
+    },
+    {
+      "task_id": "dv_gb_california_housing",
+      "family": "data_valuation",
+      "players": 10,
+      "budget": 16,
+      "replicates": 30,
+      "mean_mse": 0.009046592521807116,
+      "sem_mse": 0.0007545746828896345
+    },
+    {
+      "task_id": "dv_gb_california_housing",
+      "family": "data_valuation",
+      "players": 10,
+      "budget": 24,
+      "replicates": 30,
+      "mean_mse": 0.004017361568755154,
+      "sem_mse": 0.000553887740817629
+    },
+    {
+      "task_id": "dv_gb_california_housing",
+      "family": "data_valuation",
+      "players": 10,
+      "budget": 32,
+      "replicates": 30,
+      "mean_mse": 0.0012912391572286713,
+      "sem_mse": 0.00045549080004462497
+    },
+    {
+      "task_id": "dv_gb_california_housing",
+      "family": "data_valuation",
+      "players": 10,
+      "budget": 48,
+      "replicates": 30,
+      "mean_mse": 0.00041398637359740744,
+      "sem_mse": 0.000249634433397569
+    },
+    {
+      "task_id": "dv_gb_california_housing",
+      "family": "data_valuation",
+      "players": 10,
+      "budget": 64,
+      "replicates": 30,
+      "mean_mse": 8.738358353435267e-05,
+      "sem_mse": 7.104787462102967e-05
+    },
+    {
+      "task_id": "dv_rf_bike_sharing",
+      "family": "data_valuation",
+      "players": 10,
+      "budget": 16,
+      "replicates": 30,
+      "mean_mse": 0.010952732745475459,
+      "sem_mse": 0.0010149700470565989
+    },
+    {
+      "task_id": "dv_rf_bike_sharing",
+      "family": "data_valuation",
+      "players": 10,
+      "budget": 24,
+      "replicates": 30,
+      "mean_mse": 0.005168556988137343,
+      "sem_mse": 0.0006743118119375826
+    },
+    {
+      "task_id": "dv_rf_bike_sharing",
+      "family": "data_valuation",
+      "players": 10,
+      "budget": 32,
+      "replicates": 30,
+      "mean_mse": 0.002016023380150002,
+      "sem_mse": 0.0005611941829387429
+    },
+    {
+      "task_id": "dv_rf_bike_sharing",
+      "family": "data_valuation",
+      "players": 10,
+      "budget": 48,
+      "replicates": 30,
+      "mean_mse": 0.0004786762562514441,
+      "sem_mse": 0.0002896870628140155
+    },
+    {
+      "task_id": "dv_rf_bike_sharing",
+      "family": "data_valuation",
+      "players": 10,
+      "budget": 64,
+      "replicates": 30,
+      "mean_mse": 4.1314150361255664e-05,
+      "sem_mse": 2.7233232959177622e-05
+    },
+    {
+      "task_id": "le_vit9_imagenet",
+      "family": "local_explanation",
+      "players": 9,
+      "budget": 16,
+      "replicates": 30,
+      "mean_mse": 0.013161166697881626,
+      "sem_mse": 0.002833411964653463
+    },
+    {
+      "task_id": "le_vit9_imagenet",
+      "family": "local_explanation",
+      "players": 9,
+      "budget": 24,
+      "replicates": 30,
+      "mean_mse": 0.0061901113493243965,
+      "sem_mse": 0.0012962155376941343
+    },
+    {
+      "task_id": "le_vit9_imagenet",
+      "family": "local_explanation",
+      "players": 9,
+      "budget": 32,
+      "replicates": 30,
+      "mean_mse": 0.003768512039240412,
+      "sem_mse": 0.0006985575925333218
+    },
+    {
+      "task_id": "le_vit9_imagenet",
+      "family": "local_explanation",
+      "players": 9,
+      "budget": 48,
+      "replicates": 30,
+      "mean_mse": 0.0023681684601913953,
+      "sem_mse": 0.0004339964771686621
+    },
+    {
+      "task_id": "le_vit9_imagenet",
+      "family": "local_explanation",
+      "players": 9,
+      "budget": 64,
+      "replicates": 30,
+      "mean_mse": 0.0010530651014670404,
+      "sem_mse": 0.00020039492855482922
+    }
+  ],
+  "source_routes": [
+    ".openresearch/artifacts/claim_3/dv10_raw.csv",
+    "outputs/real_application/vit9_realized_mse.csv"
+  ],
+  "environment": {
+    "fixed_command": "uv sync --frozen && uv run python repro/src/reproduce.py",
+    "python": "3.12.11",
+    "git_sha": "8fd97aad01a7500de9492769810700d95264b11c"
+  },
+  "limitations": [
+    "Four of the paper's 15 tasks are executed.",
+    "Only data valuation and local explanation are represented.",
+    "The maximum executed budget is 64 rather than 512.",
+    "This contract establishes executed scope, not the full Figure 1 ordering."
+  ]
+}

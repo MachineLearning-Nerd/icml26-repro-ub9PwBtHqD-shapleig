@@ -1,0 +1,259 @@
+{
+  "assessment": "TOY",
+  "full_claim_verdict": "BLOCKED",
+  "tasks": 4,
+  "paper_tasks": 15,
+  "families": [
+    "data_valuation",
+    "local_explanation"
+  ],
+  "paper_families": 4,
+  "players": [
+    9,
+    10
+  ],
+  "paper_player_range": [
+    8,
+    101
+  ],
+  "maximum_archive_size": 64,
+  "paper_maximum_budget": 512,
+  "candidate_policy": "complete unevaluated coalition grid",
+  "maximum_candidate_pool": 1024,
+  "implementation": "independent NumPy/SciPy port of the pinned author Hamming-GP, five-restart MAP fit, and vectorized Shapley-EIG equations",
+  "source": "slds-lmu/shapleig@162ce44fe380c7c11b959fc85206b5dcdeddff58",
+  "by_task_archive": [
+    {
+      "task_id": "dv_gb_bike_sharing",
+      "players": 10,
+      "archive_size": 11,
+      "replicates": 5,
+      "candidate_count": 1013,
+      "hp_fit_mean_seconds": 0.07044977478217333,
+      "hp_fit_sem_seconds": 0.02762670214960041,
+      "hp_fit_max_seconds": 0.17993300000671297,
+      "eig_mean_seconds": 0.12541067521087826,
+      "eig_sem_seconds": 0.07384424284775838,
+      "eig_max_seconds": 0.4206475840182975
+    },
+    {
+      "task_id": "dv_gb_bike_sharing",
+      "players": 10,
+      "archive_size": 16,
+      "replicates": 5,
+      "candidate_count": 1008,
+      "hp_fit_mean_seconds": 0.16567615820094944,
+      "hp_fit_sem_seconds": 0.12028523483292256,
+      "hp_fit_max_seconds": 0.646692875016015,
+      "eig_mean_seconds": 0.09787340823095292,
+      "eig_sem_seconds": 0.04556645675959559,
+      "eig_max_seconds": 0.2799080830300227
+    },
+    {
+      "task_id": "dv_gb_bike_sharing",
+      "players": 10,
+      "archive_size": 32,
+      "replicates": 5,
+      "candidate_count": 992,
+      "hp_fit_mean_seconds": 0.09129485799930989,
+      "hp_fit_sem_seconds": 0.007162781585842277,
+      "hp_fit_max_seconds": 0.11638508300529793,
+      "eig_mean_seconds": 0.08410842519951985,
+      "eig_sem_seconds": 0.030112864367294254,
+      "eig_max_seconds": 0.20429824996972457
+    },
+    {
+      "task_id": "dv_gb_bike_sharing",
+      "players": 10,
+      "archive_size": 64,
+      "replicates": 5,
+      "candidate_count": 960,
+      "hp_fit_mean_seconds": 0.2825327916187234,
+      "hp_fit_sem_seconds": 0.09956357329541443,
+      "hp_fit_max_seconds": 0.6776287910179235,
+      "eig_mean_seconds": 0.06487741660093889,
+      "eig_sem_seconds": 0.010499338358229965,
+      "eig_max_seconds": 0.10182679200079292
+    },
+    {
+      "task_id": "dv_gb_california_housing",
+      "players": 10,
+      "archive_size": 11,
+      "replicates": 5,
+      "candidate_count": 1013,
+      "hp_fit_mean_seconds": 0.05121021640952676,
+      "hp_fit_sem_seconds": 0.005676481962001563,
+      "hp_fit_max_seconds": 0.06481562502449378,
+      "eig_mean_seconds": 0.09204115880420431,
+      "eig_sem_seconds": 0.023951886238261274,
+      "eig_max_seconds": 0.18261979200178757
+    },
+    {
+      "task_id": "dv_gb_california_housing",
+      "players": 10,
+      "archive_size": 16,
+      "replicates": 5,
+      "candidate_count": 1008,
+      "hp_fit_mean_seconds": 0.08271586678456515,
+      "hp_fit_sem_seconds": 0.029971198400729974,
+      "hp_fit_max_seconds": 0.20173662499291822,
+      "eig_mean_seconds": 0.09525205859681592,
+      "eig_sem_seconds": 0.04372519601981132,
+      "eig_max_seconds": 0.2699173750006594
+    },
+    {
+      "task_id": "dv_gb_california_housing",
+      "players": 10,
+      "archive_size": 32,
+      "replicates": 5,
+      "candidate_count": 992,
+      "hp_fit_mean_seconds": 0.09467160839121788,
+      "hp_fit_sem_seconds": 0.009086561534874612,
+      "hp_fit_max_seconds": 0.1261250000097789,
+      "eig_mean_seconds": 0.06743581660557538,
+      "eig_sem_seconds": 0.010597213046527113,
+      "eig_max_seconds": 0.09810066700447351
+    },
+    {
+      "task_id": "dv_gb_california_housing",
+      "players": 10,
+      "archive_size": 64,
+      "replicates": 5,
+      "candidate_count": 960,
+      "hp_fit_mean_seconds": 0.21770121679874138,
+      "hp_fit_sem_seconds": 0.04750519972037937,
+      "hp_fit_max_seconds": 0.4040497500100173,
+      "eig_mean_seconds": 0.05818362481659278,
+      "eig_sem_seconds": 0.004217543943612705,
+      "eig_max_seconds": 0.07040708302520216
+    },
+    {
+      "task_id": "dv_rf_bike_sharing",
+      "players": 10,
+      "archive_size": 11,
+      "replicates": 5,
+      "candidate_count": 1013,
+      "hp_fit_mean_seconds": 0.04410597500391304,
+      "hp_fit_sem_seconds": 0.006196592513884745,
+      "hp_fit_max_seconds": 0.06607683299807832,
+      "eig_mean_seconds": 0.08232884980970993,
+      "eig_sem_seconds": 0.0188550310476318,
+      "eig_max_seconds": 0.15383112500421703
+    },
+    {
+      "task_id": "dv_rf_bike_sharing",
+      "players": 10,
+      "archive_size": 16,
+      "replicates": 5,
+      "candidate_count": 1008,
+      "hp_fit_mean_seconds": 0.1305774997919798,
+      "hp_fit_sem_seconds": 0.07598803355812285,
+      "hp_fit_max_seconds": 0.43384262500330806,
+      "eig_mean_seconds": 0.11015484977979213,
+      "eig_sem_seconds": 0.05213289644692433,
+      "eig_max_seconds": 0.31797691696556285
+    },
+    {
+      "task_id": "dv_rf_bike_sharing",
+      "players": 10,
+      "archive_size": 32,
+      "replicates": 5,
+      "candidate_count": 992,
+      "hp_fit_mean_seconds": 0.1206258499994874,
+      "hp_fit_sem_seconds": 0.02277535861293077,
+      "hp_fit_max_seconds": 0.2074988330132328,
+      "eig_mean_seconds": 0.0541685416130349,
+      "eig_sem_seconds": 0.0018653742128920555,
+      "eig_max_seconds": 0.05858991702552885
+    },
+    {
+      "task_id": "dv_rf_bike_sharing",
+      "players": 10,
+      "archive_size": 64,
+      "replicates": 5,
+      "candidate_count": 960,
+      "hp_fit_mean_seconds": 0.22190294140018524,
+      "hp_fit_sem_seconds": 0.017031565289112267,
+      "hp_fit_max_seconds": 0.25814699998591095,
+      "eig_mean_seconds": 0.0768499169847928,
+      "eig_sem_seconds": 0.01665708424623503,
+      "eig_max_seconds": 0.14214541699038818
+    },
+    {
+      "task_id": "le_vit9_imagenet",
+      "players": 9,
+      "archive_size": 10,
+      "replicates": 5,
+      "candidate_count": 502,
+      "hp_fit_mean_seconds": 0.032680958404671404,
+      "hp_fit_sem_seconds": 0.0017296112930605969,
+      "hp_fit_max_seconds": 0.03730045800330117,
+      "eig_mean_seconds": 0.014201249973848463,
+      "eig_sem_seconds": 0.0017913345703222414,
+      "eig_max_seconds": 0.021231332968454808
+    },
+    {
+      "task_id": "le_vit9_imagenet",
+      "players": 9,
+      "archive_size": 16,
+      "replicates": 5,
+      "candidate_count": 496,
+      "hp_fit_mean_seconds": 0.03906561682233587,
+      "hp_fit_sem_seconds": 0.002279419629401257,
+      "hp_fit_max_seconds": 0.04484220902668312,
+      "eig_mean_seconds": 0.013267658394761383,
+      "eig_sem_seconds": 0.0006163136232131916,
+      "eig_max_seconds": 0.014498625008855015
+    },
+    {
+      "task_id": "le_vit9_imagenet",
+      "players": 9,
+      "archive_size": 32,
+      "replicates": 5,
+      "candidate_count": 480,
+      "hp_fit_mean_seconds": 0.06971743340836838,
+      "hp_fit_sem_seconds": 0.004805788046376648,
+      "hp_fit_max_seconds": 0.07934954203665257,
+      "eig_mean_seconds": 0.012267475202679633,
+      "eig_sem_seconds": 0.00036039950421985897,
+      "eig_max_seconds": 0.012999249971471727
+    },
+    {
+      "task_id": "le_vit9_imagenet",
+      "players": 9,
+      "archive_size": 64,
+      "replicates": 5,
+      "candidate_count": 448,
+      "hp_fit_mean_seconds": 0.1412444413988851,
+      "hp_fit_sem_seconds": 0.00658067231703283,
+      "hp_fit_max_seconds": 0.1564844580134377,
+      "eig_mean_seconds": 0.012867108802311122,
+      "eig_sem_seconds": 0.0004813252000316729,
+      "eig_max_seconds": 0.014002959011122584
+    }
+  ],
+  "observed_maxima": {
+    "hp_fit_seconds": 0.6776287910179235,
+    "eig_seconds": 0.4206475840182975
+  },
+  "paper_small_game_bounds_seconds": {
+    "hp_fit": 120,
+    "eig": 1
+  },
+  "all_observed_eig_below_one_second": true,
+  "all_observed_fit_below_120_seconds": true,
+  "elapsed_seconds": 19.60871920804493,
+  "environment": {
+    "fixed_command": "uv sync --frozen && uv run python repro/src/reproduce.py",
+    "python": "3.12.11",
+    "platform": "macOS-26.5.2-arm64-arm-64bit",
+    "logical_cpus": 8,
+    "git_sha": "f27800d6efc16a296c3f46ee03bfe20ae459a114"
+  },
+  "limitations": [
+    "Four exact tasks are timed, not all 15.",
+    "The measured p=9-10 range does not test the paper's p>16 timing claim.",
+    "The frozen NumPy/SciPy port is mathematically source-matched but is not the author Torch/BoTorch runtime.",
+    "Archive designs are deterministic matched leverage samples, not complete sequential trajectories."
+  ]
+}
