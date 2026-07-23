@@ -24,9 +24,19 @@ SEEDS = [260602247, 260602248, 260602249]
 
 def design(p: int, t: int, seed: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     rng = np.random.default_rng(seed + 1000 * p + t)
-    masks = rng.choice(1 << p, size=t + 1, replace=False)
-    observed = ((masks[:t, None] >> np.arange(p)) & 1).astype(np.int8)
-    candidate = ((masks[t] >> np.arange(p)) & 1).astype(np.int8)
+    # Sampling from range(2**p) overflows NumPy's signed-size type for p>=63.
+    # Draw bit vectors directly so the p=101 audit never materializes, or even
+    # integer-indexes, the exponential coalition universe.
+    rows: list[np.ndarray] = []
+    seen: set[bytes] = set()
+    while len(rows) < t + 1:
+        row = rng.integers(0, 2, size=p, dtype=np.int8)
+        key = row.tobytes()
+        if key not in seen:
+            seen.add(key)
+            rows.append(row)
+    observed = np.stack(rows[:t])
+    candidate = rows[t]
     lengthscales = rng.uniform(0.6, 2.0, size=p)
     return observed, candidate, lengthscales
 
