@@ -1,0 +1,6 @@
+{
+  "cases": 21,
+  "p_range": [3, 9],
+  "maximum_absolute_error": 4.540865461422072e-10,
+  "route": "explicit 2^p grid, Shapley matrix, and posterior covariance"
+}

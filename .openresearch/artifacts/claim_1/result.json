@@ -1,0 +1,41 @@
+{
+  "claim": "Theorem 3.1 and Appendix B.4 complexity",
+  "verdict": "VERIFIED",
+  "independent_checker": {
+    "cases": 21,
+    "p_range": [3, 9],
+    "maximum_absolute_error": 4.540865461422072e-10,
+    "route": "explicit 2^p grid, Shapley matrix, and posterior covariance"
+  },
+  "efficient_scaling": {
+    "p_values": [8, 12, 16, 24, 32, 48, 64, 80, 101],
+    "maximum_p_completed": 101,
+    "operation_count_loglog_slope": 3.9701514300056995,
+    "operation_count_loglog_r2": 0.9999934839608172,
+    "runtime_loglog_slope": 2.9291936155830407,
+    "runtime_loglog_r2": 0.9910743680134139,
+    "maximum_modeled_peak_bytes": 35377680
+  },
+  "naive_scaling": {
+    "p_values": [3, 4, 5, 6, 7, 8, 9, 10],
+    "largest_completed_p": 10,
+    "log_memory_vs_p_slope": 1.3159882965628344,
+    "minimum_exponential_r2": 0.999391156004339,
+    "projected_kzz_bytes_p20": 8796093022208
+  },
+  "negative_control": {
+    "mutation": "multiply one efficient EIG by 1.001",
+    "corrupted_absolute_error": 0.0014325860202100138,
+    "threshold": 1e-07,
+    "corruption_detected": true
+  },
+  "environment": {
+    "fixed_command": "uv sync --frozen && uv run python repro/src/reproduce.py",
+    "python": "3.12.11",
+    "platform": "macOS-26.5.2-arm64-arm-64bit",
+    "logical_cpus": 8,
+    "peak_rss_raw": 236535808,
+    "seeds": [260602247, 260602248, 260602249]
+  },
+  "elapsed_seconds": 4.866391666990239
+}
