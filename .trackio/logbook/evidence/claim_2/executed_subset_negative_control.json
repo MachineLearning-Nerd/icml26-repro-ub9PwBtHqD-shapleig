@@ -1,0 +1,9 @@
+{
+  "mutation": "drop the complete ViT-9 task",
+  "detected": true,
+  "errors": [
+    "expected 600 rows, got 450",
+    "task/replicate/budget grid mismatch",
+    "le_vit9_imagenet: expected 30 distinct game hashes, got 0"
+  ]
+}
