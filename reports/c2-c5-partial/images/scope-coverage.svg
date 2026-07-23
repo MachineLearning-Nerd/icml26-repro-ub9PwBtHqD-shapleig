@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360" role="img" aria-labelledby="title desc">
+  <title id="title">Claim 2 executed scope versus paper scope</title>
+  <desc id="desc">Four of fifteen tasks, two of four families, and maximum budget 64 of 512 were executed.</desc>
+  <rect width="900" height="360" fill="#fbfaf7"/>
+  <style>
+    text{font-family:ui-sans-serif,system-ui,sans-serif;fill:#17202a}
+    .label{font-size:22px;font-weight:650}.value{font-size:20px}.note{font-size:17px;fill:#52606d}
+    .track{fill:#dce3e8}.done{fill:#246b78}.blocked{fill:#b04a4a}
+  </style>
+  <text x="42" y="45" class="label">Claim 2: exact executed coverage</text>
+  <text x="42" y="82" class="value">Tasks</text>
+  <rect x="220" y="62" width="600" height="28" rx="6" class="track"/>
+  <rect x="220" y="62" width="160" height="28" rx="6" class="done"/>
+  <text x="835" y="84" class="value">4 / 15</text>
+  <text x="42" y="152" class="value">Families</text>
+  <rect x="220" y="132" width="600" height="28" rx="6" class="track"/>
+  <rect x="220" y="132" width="300" height="28" rx="6" class="done"/>
+  <text x="835" y="154" class="value">2 / 4</text>
+  <text x="42" y="222" class="value">Max budget</text>
+  <rect x="220" y="202" width="600" height="28" rx="6" class="track"/>
+  <rect x="220" y="202" width="75" height="28" rx="6" class="done"/>
+  <text x="835" y="224" class="value">64 / 512</text>
+  <text x="42" y="290" class="note">600 checked observations · 30 distinct games per task · 120 game hashes</text>
+  <rect x="42" y="315" width="16" height="16" rx="3" class="blocked"/>
+  <text x="68" y="329" class="note">Full 15-task contract remains BLOCKED; partial assessment is TOY.</text>
+</svg>

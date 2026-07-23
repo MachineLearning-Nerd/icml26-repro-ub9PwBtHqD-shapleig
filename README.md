@@ -24,6 +24,7 @@ seconds. The paper prose separately allows very short early-budget exceptions,
 so the report states that nuance and does not claim a complete 15-task rerun.
 
 [Read the illustrated technical report](reports/shapleig-claims/report.md) ·
+[Read the Claims 2 and 5 partial-evidence report](reports/c2-c5-partial/report.md) ·
 [Open the tutorial marimo notebook](notebooks/shapleig_claims.py)
 
 [![Open in molab](https://marimo.io/molab-shield.svg)](https://molab.marimo.io/github/MachineLearning-Nerd/icml26-repro-ub9PwBtHqD-shapleig/blob/master/notebooks/shapleig_claims.py)
@@ -43,6 +44,8 @@ Every formal node uses the exact same command:
 | [`orx/release-candidate-report-and-logbook`](https://github.com/MachineLearning-Nerd/icml26-repro-ub9PwBtHqD-shapleig/tree/orx/release-candidate-report-and-logbook) | Reader-facing report, notebook, protected Space candidate | `uv sync --frozen && uv run python repro/src/reproduce.py` | Five-claim release gate passed | local CPU, 9m31s |
 | [`orx/c3-exact-data-valuation-counterexample-search`](https://github.com/MachineLearning-Nerd/icml26-repro-ub9PwBtHqD-shapleig/tree/orx/c3-exact-data-valuation-counterexample-search) | Three exact tasks, 30 games each, 60 corrected comparisons | `uv sync --frozen && uv run python repro/src/reproduce.py` | Claim 3 FALSIFIED under the registered judge-claim contract | local CPU, 16m36s |
 | [`orx/c3-falsification-release-gate`](https://github.com/MachineLearning-Nerd/icml26-repro-ub9PwBtHqD-shapleig/tree/orx/c3-falsification-release-gate) | Additive logbook/report release validation | `uv sync --frozen && uv run python repro/src/reproduce.py` | Candidate validation pending; no HF publication | local CPU |
+| [`orx/c5-decomposed-exact-task-timing-subset`](https://github.com/MachineLearning-Nerd/icml26-repro-ub9PwBtHqD-shapleig/tree/orx/c5-decomposed-exact-task-timing-subset) | Measure GP fitting and EIG separately on four exact public tasks | `uv sync --frozen && uv run python repro/src/reproduce.py` | Claim 5 TOY subset; full claim remains BLOCKED | local CPU, 50m14s |
+| [`orx/c2-four-task-executed-subset`](https://github.com/MachineLearning-Nerd/icml26-repro-ub9PwBtHqD-shapleig/tree/orx/c2-four-task-executed-subset) | Register 600 checked ShaplEIG observations over four exact tasks | `uv sync --frozen && uv run python repro/src/reproduce.py` | Claim 2 TOY subset; full claim remains BLOCKED | local CPU, 21m48s |
 | `master` | Public publication surface | Not run as an experiment (publication surface) | Awaiting explicit release approval | — |
 
 ## Reproduce
