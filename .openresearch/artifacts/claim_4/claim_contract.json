@@ -1,0 +1,13 @@
+{
+  "claim_id": 4,
+  "paper_anchor": "Appendix D.2.1, Figure 3",
+  "statement": "EIG-based acquisition outperforms GP+Random, GP+Leverage Score Sampling, and GP+Uncertainty Sampling.",
+  "domain": "the paper's GP-surrogate ablation using its official task games and reported budgets",
+  "falsification_rule": {
+    "required_grid": "30 official ViT-9 games x 5 budgets x 4 GP variants",
+    "counterexample": "a named baseline has better mean rank and lower mean MSE at most reported budgets",
+    "verdict": "FALSIFIED"
+  },
+  "negative_control": "swap ShaplEIG and GP+Uncertainty labels; the original result must be rejected",
+  "fixed_command": "uv sync --frozen && uv run python repro/src/reproduce.py"
+}

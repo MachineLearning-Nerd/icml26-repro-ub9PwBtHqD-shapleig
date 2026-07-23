@@ -107,6 +107,7 @@ def main() -> None:
     run(sys.executable, "repro/src/analyze_real_results.py")
     run(sys.executable, "repro/src/plot_real_results.py")
     run(sys.executable, "repro/src/verify_upstream_parity.py")
+    run(sys.executable, "repro/src/run_claim4_audit.py")
     run(sys.executable, "repro/src/run_complexity_claim.py")
     run(sys.executable, "repro/src/run_claim5_audit.py")
     run(sys.executable, "repro/src/run_scope_audit.py")
@@ -125,6 +126,12 @@ def main() -> None:
     )
     result["claim_2_scope"] = scope_audit["claim_2_verdict"]
     result["claim_3_full_scale"] = scope_audit["claim_3_verdict"]
+    claim_4 = json.loads(
+        (ROOT / ".openresearch" / "artifacts" / "claim_4" / "result.json").read_text()
+    )
+    result["claim_4_ablation"] = claim_4["verdict"]
+    if claim_4["verdict"] != "FALSIFIED":
+        raise AssertionError("Claim 4 falsification package regressed")
     result.update(
         {
             "git_sha": subprocess.check_output(
