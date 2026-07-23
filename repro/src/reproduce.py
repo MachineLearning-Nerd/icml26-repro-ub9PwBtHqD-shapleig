@@ -111,6 +111,7 @@ def main() -> None:
     run(sys.executable, "repro/src/run_complexity_claim.py")
     run(sys.executable, "repro/src/run_claim5_audit.py")
     run(sys.executable, "repro/src/run_scope_audit.py")
+    run(sys.executable, "repro/src/run_claim3_dv_audit.py")
     run(sys.executable, "repro/src/build_report_assets.py")
 
     result = verify_cumulative_results()
@@ -126,7 +127,10 @@ def main() -> None:
         (ROOT / ".openresearch" / "artifacts" / "claim_2" / "result.json").read_text()
     )
     result["claim_2_scope"] = scope_audit["claim_2_verdict"]
-    result["claim_3_full_scale"] = scope_audit["claim_3_verdict"]
+    claim_3 = json.loads(
+        (ROOT / ".openresearch" / "artifacts" / "claim_3" / "result.json").read_text()
+    )
+    result["claim_3_full_scale"] = claim_3["verdict"]
     claim_4 = json.loads(
         (ROOT / ".openresearch" / "artifacts" / "claim_4" / "result.json").read_text()
     )

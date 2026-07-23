@@ -33,10 +33,12 @@ def grid(p: int) -> np.ndarray:
     return ((np.arange(1 << p)[:, None] >> np.arange(p)) & 1).astype(bool)
 
 
-def load_game(path: Path) -> tuple[np.ndarray, np.ndarray]:
+def load_game(path: Path, expected_p: int | None = 9) -> tuple[np.ndarray, np.ndarray]:
     d = np.load(path)
     p = int(d["n_players"])
-    if p != 9 or d["coalitions"].shape != (512, 9):
+    if expected_p is not None and p != expected_p:
+        raise ValueError(f"expected {expected_p} players in {path}, got {p}")
+    if d["coalitions"].shape != (1 << p, p):
         raise ValueError(f"unexpected game shape in {path}")
     masks = d["coalitions"].astype(np.int64) @ (1 << np.arange(p))
     if len(np.unique(masks)) != 1 << p or set(masks) != set(range(1 << p)):
@@ -168,7 +170,10 @@ def leverage_sample(p: int, budget: int, seed: int) -> np.ndarray:
 
 def gp_run(values: np.ndarray, policy: str, budgets: list[int], seed: int,
            adaptive: bool = True, ard: bool = True, refit_interval: int = 4) -> dict[int, np.ndarray]:
-    p, X, A = 9, grid(9), shapley_matrix(9)
+    p = int(round(math.log2(len(values))))
+    if len(values) != 1 << p:
+        raise ValueError("game values must enumerate a complete power-of-two coalition space")
+    X, A = grid(p), shapley_matrix(p)
     observed = list(dict.fromkeys(leverage_sample(p, p + 1, seed).tolist()))
     rng = np.random.default_rng(seed)
     prior_mode = math.exp(math.sqrt(2) + 0.5 * math.log(p) - 3)
@@ -211,7 +216,8 @@ def gp_run(values: np.ndarray, policy: str, budgets: list[int], seed: int,
 
 
 def permutation_estimate(values: np.ndarray, budget: int, seed: int) -> np.ndarray:
-    p, rng = 9, np.random.default_rng(seed)
+    p = int(round(math.log2(len(values))))
+    rng = np.random.default_rng(seed)
     total, used = np.zeros(p), 0
     while used + p + 1 <= budget:
         perm = rng.permutation(p)
@@ -227,7 +233,8 @@ def permutation_estimate(values: np.ndarray, budget: int, seed: int) -> np.ndarr
 
 def baseline_estimates(values: np.ndarray, budget: int, seed: int) -> dict[str, np.ndarray]:
     from shapiq import KernelSHAP, SVARM, UnbiasedKernelSHAP
-    game, p, weights = game_callable(values), 9, np.ones(10)
+    p = int(round(math.log2(len(values))))
+    game, weights = game_callable(values), np.ones(p + 1)
     methods = {
         "KernelSHAP": KernelSHAP(n=p, index="SV", max_order=1, pairing_trick=True,
                                   sampling_weights=weights, random_state=seed),
@@ -249,32 +256,34 @@ def regression_msr_estimate(values: np.ndarray, budget: int, seed: int) -> np.nd
     from shapiq import UnbiasedKernelSHAP
     from xgboost import XGBRegressor
 
-    sampler = leverage_sampler(9, budget, seed)
+    p = int(round(math.log2(len(values))))
+    sampler = leverage_sampler(p, budget, seed)
     X = sampler.coalitions_matrix.astype(float)
     y = game_callable(values)(X)
     model = XGBRegressor(random_state=seed, n_jobs=1)
     model.fit(X, y)
     explainer = shap.TreeExplainer(
-        model, feature_perturbation="interventional", data=np.zeros((1, 9))
+        model, feature_perturbation="interventional", data=np.zeros((1, p))
     )
-    tree = np.asarray(explainer.shap_values(np.ones(9)), dtype=float)
+    tree = np.asarray(explainer.shap_values(np.ones(p)), dtype=float)
     residual = y - model.predict(X)
 
     # This deliberately mirrors upstream residualGame: the residual estimator's
     # same-seed sampler requests the same coalitions, so values are returned in
     # their sampled order.
     residual_method = UnbiasedKernelSHAP(
-        n=9, pairing_trick=True, replacement=False, random_state=seed
+        n=p, pairing_trick=True, replacement=False, random_state=seed
     )
     residual_result = residual_method.approximate(
         budget=budget, game=lambda coalitions: residual.copy()
     )
-    return tree + sv_from_result(residual_result, 9)
+    return tree + sv_from_result(residual_result, p)
 
 
 def leverage_estimate(values: np.ndarray, budget: int, seed: int) -> np.ndarray:
     """LeverageSHAP regression from the authors' PolySHAP implementation."""
-    p, sampler = 9, leverage_sampler(9, budget, seed)
+    p = int(round(math.log2(len(values))))
+    sampler = leverage_sampler(p, budget, seed)
     X = sampler.coalitions_matrix.astype(bool)
     coals = X.astype(np.int64) @ (1 << np.arange(p))
     y = values[coals].copy()
