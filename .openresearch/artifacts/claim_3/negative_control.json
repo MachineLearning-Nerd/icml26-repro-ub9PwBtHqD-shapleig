@@ -1,0 +1,7 @@
+{
+  "mutation": "delete one exact task/seed/budget/method observation",
+  "detected": true,
+  "errors": [
+    "expected 2250 rows, got 2249"
+  ]
+}

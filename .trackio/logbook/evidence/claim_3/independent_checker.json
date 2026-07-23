@@ -1,5 +1,23 @@
 {
   "verifier_exit": 0,
   "errors": [],
-  "task_rows": 15
+  "raw_rows": 2250,
+  "recomputed_comparisons": 60,
+  "recomputed_counterexamples": [
+    [
+      "dv_gb_bike_sharing",
+      16,
+      "RegressionMSR"
+    ],
+    [
+      "dv_gb_california_housing",
+      16,
+      "RegressionMSR"
+    ],
+    [
+      "dv_rf_bike_sharing",
+      16,
+      "RegressionMSR"
+    ]
+  ]
 }

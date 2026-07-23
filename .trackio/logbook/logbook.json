@@ -11,7 +11,7 @@
     "icml2026-repro",
     "paper-ub9PwBtHqD"
   ],
-  "updated_at": "2026-07-23T08:40:00+00:00",
+  "updated_at": "2026-07-23T09:45:00+00:00",
   "root": {
     "slug": "index",
     "title": "Repro - ShaplEIG (Bayesian Design for Shapley)",
@@ -32,6 +32,12 @@
             "slug": "claims-2-3-scope",
             "title": "Claims 2–3 — Exact scope audit",
             "file": "pages/claims-2-3-scope/page.md",
+            "children": []
+          },
+          {
+            "slug": "claim-3-data-valuation-counterexample",
+            "title": "Claim 3 — Data-valuation counterexamples",
+            "file": "pages/claim-3-data-valuation-counterexample/page.md",
             "children": []
           },
           {

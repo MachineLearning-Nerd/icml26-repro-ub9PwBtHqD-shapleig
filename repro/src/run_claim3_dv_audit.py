@@ -144,6 +144,7 @@ def main() -> None:
         "elapsed_seconds": time.perf_counter() - started,
         "limitations": [
             "This registered search covers three exact tasks, not the full 15-task matrix.",
+            "All robust counterexamples occur at budget 16, the earliest point and only five evaluations after the p+1 initial design; Section 5.2 permits very-short-interval exceptions.",
             "The frozen Python 3.12 NumPy/SciPy reimplementation is an explicit environment deviation from the authors' Python 3.11 Torch/GPyTorch stack.",
             "A FALSIFIED verdict is issued only if an exact-task counterexample survives matched uncertainty and family-wise multiplicity correction.",
         ],
@@ -205,6 +206,10 @@ registered comparisons.
   `src/xac/experiments/conf/shapleig_crv_shapiq_dv_10p.yaml`.
 - Quantifiers tested here: three named data-valuation tasks, 30 repetitions,
   exact 10-player games, four named baselines, and five early budgets.
+- Source nuance: Section 5.2 permits exceptions over very short intervals.
+  Budget 16 is the earliest tested point, five evaluations after the `p+1`
+  initial design, so the verdict is scoped to the judge's broad Claim 3
+  wording and does not claim contradiction of every narrower prose sentence.
 """
     )
     (ART / "EVAL.md").write_text(
@@ -216,6 +221,8 @@ The exact three-task data-valuation search produced {len(counterexamples)}
 counterexample cells under the registered family-wise statistical rule.
 See `dv10_raw.csv`, `dv10_statistics.json`, `independent_checker.json`, and
 `negative_control.json`. This does not claim completion of the 15-task matrix.
+All counterexamples occur at the earliest budget (16); the paper's separate
+very-short-interval caveat is therefore retained explicitly.
 """
     )
     print("=== CLAIM_3_DV_AUDIT ===")

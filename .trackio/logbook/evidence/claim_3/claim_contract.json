@@ -1,14 +1,11 @@
 {
   "claim_id": 3,
-  "source": {
-    "paper": "arXiv:2606.02247v1",
-    "anchors": ["S5.F1", "S5.SS2"],
-    "source_sha256": "81809d39fa180bab590aa3eb2c3a0c37ac3d17df20c91ac47dc4f805c981dff1"
-  },
-  "contract": {
-    "verified": "Matched realized-MSE comparisons cover all 15 exact tasks, paper budgets through 512, repetitions, named baselines, and uncertainty.",
-    "falsified": "A counterexample under the exact paper task/configuration contradicts the quantified comparison.",
-    "blocked": "The complete matched 15-task performance matrix cannot be generated under the immutable environment."
-  },
-  "allowed_verdicts": ["VERIFIED", "FALSIFIED", "BLOCKED"]
+  "verified": "all 15 exact tasks, paper budgets, repetitions, and named baselines favor ShaplEIG under matched realized-MSE uncertainty",
+  "falsified": "at least one exact paper task/configuration yields a named-baseline win surviving the pre-registered paired bootstrap, Wilcoxon, and Holm criteria",
+  "blocked": "neither the complete 15-task matrix nor a robust exact-task counterexample is available",
+  "allowed_verdicts": [
+    "VERIFIED",
+    "FALSIFIED",
+    "BLOCKED"
+  ]
 }

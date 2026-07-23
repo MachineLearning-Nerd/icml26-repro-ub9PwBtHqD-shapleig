@@ -1,17 +1,22 @@
 {
   "judged_revision": "85ca787e52cd4ba933883116d010d919bfe54fe7",
   "old_path_count": 21,
-  "candidate_path_count": 68,
+  "candidate_path_count": 73,
   "old_file_set_is_subset": true,
   "missing_old_paths": [],
   "unchanged_old_paths_except_additive_index": true,
   "changed_old_paths_except_logbook_json": [],
   "logbook_json_modified_additively": true,
-  "upload_path_count": 48,
+  "missing_historical_page_references": [],
+  "upload_path_count": 53,
+  "upload_allowlist_matches_changed_text_set": true,
+  "upload_allowlist_mismatch": [],
+  "unsafe_allowlist_paths": [],
   "all_uploads_utf8": true,
   "utf8_errors": [],
   "nul_files": [],
   "all_json_valid": true,
   "json_errors": [],
-  "secret_pattern_file_count": 0
+  "secret_pattern_file_count": 0,
+  "secret_pattern_files": []
 }

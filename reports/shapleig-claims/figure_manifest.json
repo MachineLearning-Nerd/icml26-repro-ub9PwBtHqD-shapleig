@@ -1,4 +1,8 @@
 {
+  "reports/shapleig-claims/images/claim3_dv_counterexample.png": {
+    "sha256": "98ba82a22ac63c076610b9ef28f39e4c7a3cd791d86abe3601e146fbc3228a88",
+    "bytes": 61496
+  },
   "reports/shapleig-claims/images/claim4_ablation.png": {
     "sha256": "85999a8f371e692ebb591a02f6468a1237601bcbfe18a5ee20f22beef0bd266c",
     "bytes": 137950

@@ -1,4 +1,4 @@
-"""Build the four evidence figures used by the public reproduction report."""
+"""Build the evidence figures used by the public reproduction report."""
 from __future__ import annotations
 
 import csv
@@ -32,6 +32,57 @@ def finish(fig: plt.Figure, name: str) -> Path:
     fig.savefig(path, dpi=180, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     return path
+
+
+def claim3_dv_counterexample() -> Path:
+    result = json.loads((CLAIMS / "claim_3" / "result.json").read_text())
+    rows = result["counterexamples"]
+    labels = {
+        "dv_rf_bike_sharing": "Bike / RF",
+        "dv_gb_bike_sharing": "Bike / GB",
+        "dv_gb_california_housing": "California / GB",
+    }
+    rows = sorted(rows, key=lambda row: labels[row["task_id"]])
+    x = np.arange(len(rows))
+    width = 0.36
+    fig, ax = plt.subplots(figsize=(8.8, 5.1))
+    ax.bar(
+        x - width / 2,
+        [row["shapleig_mean_mse"] for row in rows],
+        width,
+        color=COLORS["blue"],
+        label="ShaplEIG",
+    )
+    ax.bar(
+        x + width / 2,
+        [row["baseline_mean_mse"] for row in rows],
+        width,
+        color=COLORS["red"],
+        label="Regression MSR",
+    )
+    for index, row in enumerate(rows):
+        ratio = row["geometric_mean_ratio_shapleig_over_baseline"]
+        low, high = row["bootstrap_ratio_95ci"]
+        ax.text(
+            index,
+            max(row["shapleig_mean_mse"], row["baseline_mean_mse"]) + 0.00035,
+            f"{ratio:.2f}×\n[{low:.2f}, {high:.2f}]",
+            ha="center",
+            fontsize=8.5,
+            fontweight="bold",
+        )
+    ax.set_xticks(x, [labels[row["task_id"]] for row in rows])
+    ax.set_ylabel("Arithmetic mean realized Shapley MSE")
+    ax.set_ylim(0, 0.0145)
+    ax.set_title(
+        "Claim 3 counterexample at budget 16 (30 matched games per task)",
+        pad=12,
+    )
+    ax.legend(frameon=False)
+    ax.grid(axis="y", alpha=0.2)
+    ax.spines[["top", "right"]].set_visible(False)
+    fig.tight_layout()
+    return finish(fig, "claim3_dv_counterexample.png")
 
 
 def claim4_ablation() -> Path:
@@ -181,6 +232,7 @@ def retained_sota() -> Path:
 def main() -> None:
     IMAGES.mkdir(parents=True, exist_ok=True)
     paths = [
+        claim3_dv_counterexample(),
         claim4_ablation(),
         claim1_scaling(),
         scope_coverage(),

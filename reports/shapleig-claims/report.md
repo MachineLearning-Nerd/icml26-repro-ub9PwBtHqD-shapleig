@@ -1,21 +1,20 @@
-# ShaplEIG, claim by claim: one verification, one falsification, three honest blocks
+# ShaplEIG, claim by claim: exact-task counterexamples change the picture
 
-![The GP-surrogate ablation contradicts the reported acquisition-policy ordering.](images/claim4_ablation.png)
+![Regression MSR beats ShaplEIG at the earliest tested budget on all three exact public data-valuation tasks.](images/claim3_dv_counterexample.png)
 
 ShaplEIG asks a useful question: if coalition evaluations are expensive, which
 coalition should we evaluate next to learn the Shapley values fastest? The
 paper answers with a Gaussian-process posterior and a closed-form expected
 information gain (EIG). This campaign tested five judge-selected claims using
-one frozen command on local CPU. The result is mixed by design, not by
-presentation: Claim 1 is **VERIFIED**, Claim 4 is **FALSIFIED**, and Claims 2,
-3, and 5 are **BLOCKED** because exact inputs or the full environment are not
-available under the frozen reproduction contract.
+one frozen command on local CPU. Claim 1 is **VERIFIED**; Claims 3 and 4 are
+**FALSIFIED** under their registered judge-claim contracts; and Claims 2 and 5
+remain **BLOCKED**.
 
 | Claim | Paper statement | Observed evidence | Verdict |
 |---|---|---|---|
 | 1 | Closed-form EIG costs \(O(p^4+t^3)\), avoiding \(O(4^p t)\) | 21 explicit checks; max error \(4.54\times10^{-10}\); operation slope 3.970; \(p=101\) completes | **VERIFIED** |
 | 2 | Evaluation covers 15 tasks, four families, budgets to 512 | Exact inventory confirms the scope; 9 tasks runnable, 6 exact tasks unavailable | **BLOCKED** |
-| 3 | ShaplEIG beats four named estimators across all 15 tasks | Strong result on one official task, but only 1/15 tasks and budgets to 64 | **BLOCKED** |
+| 3 | ShaplEIG beats four named estimators across the Figure 1 tasks and budgets | Regression MSR wins at budget 16 on all three exact public data-valuation tasks | **FALSIFIED** |
 | 4 | EIG beats all three GP acquisition alternatives | GP+Uncertainty wins mean MSE at 4/5 budgets and has the better mean rank | **FALSIFIED** |
 | 5 | EIG stays below 30 s; GP refits reach about 25 min | Exact timed code identified, but the required author runtime and manual data are absent | **BLOCKED** |
 
@@ -58,12 +57,12 @@ regression remains at machine precision.
 
 The modeled operation count has log–log slope 3.970 with
 \(R^2=0.999993\), matching the quartic term. The efficient path completes at
-\(p=101,t=102\) in 3.51 s on the release-gate CPU run. The explicit
+\(p=101,t=102\) in 4.78 s on the Claim 3 cumulative CPU run. The explicit
 coalition-kernel route reaches only \(p=10\); its modeled \(K_{ZZ}\) alone is
 8 TiB at \(p=20\). Mutating one EIG by 0.1% is detected by the independent
 checker.
 
-## Claims 2–3 — the missing six tasks matter
+## Claim 2 — the missing six tasks matter
 
 ![Exact task availability by the paper's four task families.](images/scope_coverage.png)
 
@@ -77,18 +76,55 @@ The remaining six are not interchangeable details. Three feature-importance
 tasks require author-only TabPFN precomputations/runtime; three
 hyperparameter-importance tasks require YAHPO runtime and manually provisioned
 surrogate metadata. Removing one required manifest entry makes the scope
-verifier fail. Therefore the full 15-task evaluation and its performance
-ordering are **BLOCKED**, not approximated with a nearby benchmark.
+verifier fail. Therefore the full 15-task evaluation is **BLOCKED**, not
+approximated with a nearby benchmark.
 
 ![The retained one-task result is useful but does not establish the 15-task claim.](images/claim3_retained_task.png)
 
 On all 30 official ViT-9 games, ShaplEIG has lower paired geometric-mean MSE
 than KernelSHAP, LeverageSHAP, Permutation Sampling, and Regression MSR; every
 paired Wilcoxon \(p<5\times10^{-5}\). This is meaningful retained evidence,
-but it covers one local-explanation task and budgets 16–64. It is not promoted
-to Claim 3.
+but it covers one local-explanation task and budgets 16–64. It is retained as
+positive evidence, not extrapolated to the remaining tasks.
+
+## Claim 3 — three exact-task counterexamples
+
+The new search uses every public game for the three 10-player data-valuation
+tasks: Bike Sharing with random forest, Bike Sharing with gradient boosting,
+and California Housing with gradient boosting. Each task has 30 matched games.
+The implementation follows the pinned author configuration: leverage-score
+initial design of \(p+1\), weighted-Hamming GP, five MAP restarts, refitting
+every iteration, exhaustive candidate acquisition, and seeds 1–30. It compares
+ShaplEIG against exactly KernelSHAP, LeverageSHAP, Permutation Sampling, and
+Regression MSR, using realized MSE against all 1,024 coalition values.
+
+At budget 16, Regression MSR has lower arithmetic-mean MSE on every task:
+
+| Exact task | ShaplEIG mean MSE | Regression MSR mean MSE | Paired geometric ratio (95% bootstrap CI) | Holm-adjusted \(p\) |
+|---|---:|---:|---:|---:|
+| Bike Sharing / RF | 0.010953 | 0.005481 | 1.837 [1.489, 2.257] | 0.000471 |
+| Bike Sharing / GB | 0.011583 | 0.006439 | 1.655 [1.384, 1.978] | 0.000603 |
+| California Housing / GB | 0.009047 | 0.004335 | 1.967 [1.623, 2.359] | 0.0000358 |
+
+These are not selected after an uncorrected sweep. The registered family
+contains all \(3\times5\times4=60\) task/budget/baseline comparisons. Every
+counterexample requires the arithmetic and geometric means to favor the
+baseline, a 20,000-resample paired bootstrap interval wholly above one, and a
+one-sided paired Wilcoxon test surviving Holm family-wise correction. A second
+process reconstructs all 2,250 raw cells and all 60 tests; deleting one cell is
+detected.
+
+This **FALSIFIES the judge's broad Claim 3 wording** that ShaplEIG achieves
+lower MSE than all four named baselines across the Figure 1 tasks and varying
+budgets. There is an important source nuance: Section 5.2 permits exceptions
+over “very short intervals,” and budget 16 is the earliest registered point,
+only five evaluations after the \(p+1\) initial design. The evidence therefore
+does not contradict every narrower prose sentence and is not a replacement for
+the unavailable 15-task matrix.
 
 ## Claim 4 — an official-task counterexample
+
+![The GP-surrogate ablation contradicts the reported acquisition-policy ordering.](images/claim4_ablation.png)
 
 The 600 raw rows form a complete \(30\times5\times4\) grid for the paper's GP
 ablation. GP+Uncertainty has lower arithmetic-mean MSE at budgets 16, 24, 32,
@@ -111,17 +147,19 @@ conflicts with the author's `<3.12` contract; `torch`, `gpytorch`, `botorch`,
 YAHPO/TabPFN data are unavailable. Marking those prerequisites as present
 removes the blocker and is rejected by the negative-control gate.
 
-The NumPy closed-form diagnostic takes 3.51 s for one candidate at \(p=101\).
+The NumPy closed-form diagnostic takes 4.78 s for one candidate at \(p=101\).
 It is explicitly not the paper's 1,024-candidate per-iteration timing and is
 not used as Claim 5 evidence.
 
 ## Reproducibility and cost
 
-The cumulative release gate ran at Git SHA `05258258c9e7da4b7e4eac0699c241b0060fd5fa`
+The exact Claim 3 search ran at Git SHA
+`362569f32fd64fd72e4123f2c408e08f5157afda`
 on local Apple-arm64 CPU with 8 logical CPUs, Python 3.12.11, and no GPU. Wall
-time was 365.15 s; external compute cost was $0. The baseline and four accepted
-research descendants totalled about 28 minutes of successful local CPU wall
-time, plus one retained failed Claim 1 diagnostic run.
+time was 990.35 s, including 582.80 s for the three-task Claim 3 search;
+external compute cost was $0. Successful campaign runs through this node total
+about 54 minutes of local CPU wall time, plus one retained failed Claim 1
+diagnostic run.
 
 Raw evidence lives under `.openresearch/artifacts/claim_1` through
 `.openresearch/artifacts/claim_5`. The public tutorial notebook embeds the
@@ -131,8 +169,8 @@ small accepted results, so opening it does not rerun the expensive matrix.
 
 The campaign materially improves the evidence quality without manufacturing
 coverage: it replaces Claim 1's toy status with a full complexity verification,
-preserves Claim 4's full-credit falsification, converts vague gaps in Claims
-2, 3, and 5 into explicit reproducible blockers, and keeps the strong one-task
-benchmark visible but correctly scoped. A full-scale continuation needs the
-six exact TabPFN/YAHPO tasks and the author's Python/runtime/data stack for
-per-iteration timing.
+adds three corrected exact-task counterexamples for Claim 3, preserves Claim
+4's falsification, and keeps Claims 2 and 5 blocked where their exact inputs or
+runtime are unavailable. A complete Figure 1 recreation still needs the six
+TabPFN/YAHPO tasks; exact overhead timing needs the author's Python/runtime/data
+stack.

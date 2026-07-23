@@ -1,9 +1,15 @@
 # Claim 3 source audit
 
-Figure 1 (`#S5.F1`) presents mean squared Shapley-value estimation error over
-the 15 Table 1 tasks and varying evaluation budgets. Section 5.2
-(`#S5.SS2`) compares ShaplEIG with Kernel SHAP, Leverage SHAP, Permutation
-Sampling, and Regression MSR.
-
-The accepted judged evidence covers only ImageNet/ViT-9, 30 games, and budgets
-16–64. It remains reachable and is not reinterpreted as 15-task evidence.
+- Paper: arXiv:2606.02247v1, Figure 1 and Section 5.2.
+- Public data: `mmschlk/shapiq` commit
+  `799cfd0f2c32f17446130247a7ac3519e68cce82`.
+- Author code: `slds-lmu/shapleig` commit
+  `162ce44fe380c7c11b959fc85206b5dcdeddff58`.
+- Exact configuration:
+  `src/xac/experiments/conf/shapleig_crv_shapiq_dv_10p.yaml`.
+- Quantifiers tested here: three named data-valuation tasks, 30 repetitions,
+  exact 10-player games, four named baselines, and five early budgets.
+- Source nuance: Section 5.2 permits exceptions over very short intervals.
+  Budget 16 is the earliest tested point, five evaluations after the `p+1`
+  initial design, so the verdict is scoped to the judge's broad Claim 3
+  wording and does not claim contradiction of every narrower prose sentence.

@@ -1,6 +1,6 @@
 # Claims 2–3 — exact evaluation scope
 
-## Verdicts: Claim 2 BLOCKED · Claim 3 BLOCKED
+## Verdicts: Claim 2 BLOCKED · Claim 3 FALSIFIED
 
 The source statement is exactly 15 tasks across feature importance, data
 valuation, hyperparameter importance, and local explanation, with budgets up
@@ -18,9 +18,7 @@ tasks require author-only precomputations/runtime or manually provisioned
 surrogate metadata. Deleting one required public manifest entry makes the
 independent scope verifier fail.
 
-The preserved performance evidence uses all 30 official ViT-9 games and finds
-lower paired geometric-mean MSE than KernelSHAP, LeverageSHAP, Permutation
-Sampling, and Regression MSR, with every paired Wilcoxon `p<5e-5`. It covers
-one task and budgets 16–64, so it is not promoted to the 15-task claim.
+Claim 3 now has a separate exact-task counterexample page. The full 15-task
+matrix remains unavailable, so Claim 2 stays BLOCKED.
 
 Evidence: `evidence/claim_2/` and `evidence/claim_3/`.

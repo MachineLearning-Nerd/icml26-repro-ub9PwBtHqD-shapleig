@@ -113,6 +113,7 @@ def main() -> None:
     run(sys.executable, "repro/src/run_scope_audit.py")
     run(sys.executable, "repro/src/run_claim3_dv_audit.py")
     run(sys.executable, "repro/src/build_report_assets.py")
+    run(sys.executable, "repro/src/validate_release_candidate.py")
 
     result = verify_cumulative_results()
     claim_1 = json.loads(
