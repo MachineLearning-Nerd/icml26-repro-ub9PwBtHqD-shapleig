@@ -1,85 +1,73 @@
-# ShaplEIG — Bayesian Experimental Design for Shapley Value Estimation
+# ShaplEIG reproduction: five claims under one CPU contract
 
-Reproduction of **“ShaplEIG: Bayesian Experimental Design for Shapley Value
-Estimation”** ([arXiv 2606.02247](https://arxiv.org/abs/2606.02247), ICML 2026,
-[OpenReview ub9PwBtHqD](https://openreview.net/forum?id=ub9PwBtHqD)).
+This repository reproduces claims from
+**“ShaplEIG: Bayesian Experimental Design for Shapley Value Estimation”**
+([arXiv 2606.02247](https://arxiv.org/abs/2606.02247)). The strongest new
+finding is a direct official-task counterexample to the GP-ablation claim:
+GP+Uncertainty has lower arithmetic-mean Shapley MSE at budgets 16, 24, 32,
+and 48; ShaplEIG wins only at 64.
 
-## Outcome
+| Claim | Paper result | Observed result | Assessment |
+|---|---|---|---|
+| Closed-form complexity | \(O(p^4+t^3)\) vs. \(O(4^p t)\) | operation slope 3.970; 21 explicit checks, max error \(4.54\times10^{-10}\); \(p=101\) completed | **VERIFIED** |
+| Evaluation scope | 15 tasks, 4 families, budget 512 | exact inventory confirmed; 9 runnable, 6 blocked | **BLOCKED** |
+| SOTA performance | lower MSE on all 15 tasks | lower MSE on one official ViT-9 task only, budget ≤64 | **BLOCKED** |
+| GP ablation | EIG beats Random, Leverage, Uncertainty | GP+Uncertainty wins 4/5 mean-MSE budgets | **FALSIFIED** |
+| Per-iteration overhead | EIG <30 s; refit up to ~25 min | exact code located; author runtime and manual data unavailable | **BLOCKED** |
 
-| Claim | Evidence | Outcome |
-|---|---|---|
-| C1: Shapley-target EIG has a closed form | Independent Monte Carlo mutual information and GP Schur complement | **Verified** |
-| C2: EIG acquisition improves costly Shapley estimation over strong baselines | 30 official ImageNet/ViT-9 games, 512 coalitions each, 11 methods, five matched budgets | **Verified** |
+The agreed compute is local CPU: Apple arm64, 8 logical CPUs, Python 3.12.11,
+one locked repository `.venv`, no GPU, and $0 external compute cost. The
+cumulative run took 365.15 seconds. The retained ImageNet result uses all 30
+official ViT-9 games but is intentionally not described as the 15-task claim.
 
-C2 is evaluated on realized Shapley MSE—not posterior trace—against KernelSHAP,
-LeverageSHAP, RegressionMSR, UnbiasedKernelSHAP, SVARM, and permutation
-sampling. Across the five budgets, adaptive ShaplEIG’s paired geometric-mean
-MSE ratio is below one for every baseline:
+[Read the illustrated technical report](reports/shapleig-claims/report.md) ·
+[Open the tutorial marimo notebook](notebooks/shapleig_claims.py)
 
-| Baseline | ShaplEIG / baseline MSE | Paired bootstrap 95% CI | 30-game curve wins |
-|---|---:|---:|---:|
-| KernelSHAP | 0.219 | [0.099, 0.417] | 86.7% |
-| LeverageSHAP | 0.404 | [0.284, 0.556] | 86.7% |
-| RegressionMSR | 0.578 | [0.457, 0.724] | 80.0% |
-| UnbiasedKernelSHAP | 0.147 | [0.101, 0.211] | 100% |
-| SVARM | 0.186 | [0.130, 0.256] | 100% |
-| Permutation sampling | 0.212 | [0.159, 0.275] | 100% |
+[![Open in molab](https://marimo.io/molab-shield.svg)](https://molab.marimo.io/github/MachineLearning-Nerd/icml26-repro-ub9PwBtHqD-shapleig/blob/master/notebooks/shapleig_claims.py)
 
-All paired Wilcoxon p-values are below `5e-5`. Two genuine low-budget
-KernelSHAP singular-regression failures are retained in the raw results; the
-paired log-MSE analysis prevents those outliers from driving the conclusion.
+## Experiment log
 
-![SOTA comparison](outputs/real_application/sota_mse_curve.png)
+Every formal node uses the exact same command:
+`uv sync --frozen && uv run python repro/src/reproduce.py`.
 
-## Exact protocol and provenance
-
-- Application: ImageNet local explanation using a Vision Transformer and nine
-  image patches, an exact task from the paper’s Table 1/configuration.
-- Replicates: all 30 official precomputed games, each containing the exhaustive
-  `2^9 = 512` costly-inference coalition values.
-- Data: pinned to `mmschlk/shapiq@799cfd0f2c32f17446130247a7ac3519e68cce82`
-  and checked against 30 committed SHA-256 values.
-- Design: `p+1` paired LeverageSHAP initialization, quasi-noiseless Hamming GP,
-  MAP ARD lengthscales, and exhaustive closed-form EIG selection.
-- Budgets: 16, 24, 32, 48, and 64 coalition evaluations—the low-data region in
-  which costly evaluation selection matters.
-- Author-code parity: local LeverageSHAP and RegressionMSR match
-  `slds-lmu/shapleig@162ce44fe380c7c11b959fc85206b5dcdeddff58` exactly
-  (`max_abs_diff = 0.0`) on five checks, including replicates 12 and 16.
-
-`APPROACH_LEDGER.md` records 14 independent approaches and ablations. The fixed
-isotropic Hamming-GP sensitivity control is reported separately and is never
-substituted for the primary adaptive result.
+| Branch / experiment | Purpose or change | Exact run command | Assessment / outcome | Compute |
+|---|---|---|---|---|
+| [`orx/frozen-judged-baseline`](https://github.com/MachineLearning-Nerd/icml26-repro-ub9PwBtHqD-shapleig/tree/orx/frozen-judged-baseline) | Freeze judged state and locked environment | `uv sync --frozen && uv run python repro/src/reproduce.py` | Retained judged evidence; 18 tests passed | local CPU, 8m16s |
+| [`orx/c1-esp-empirical-scaling`](https://github.com/MachineLearning-Nerd/icml26-repro-ub9PwBtHqD-shapleig/tree/orx/c1-esp-empirical-scaling) | Exact-vs-polynomial complexity audit | `uv sync --frozen && uv run python repro/src/reproduce.py` | Claim 1 VERIFIED | local CPU, 4m25s |
+| [`orx/c5-per-iteration-overhead-audit`](https://github.com/MachineLearning-Nerd/icml26-repro-ub9PwBtHqD-shapleig/tree/orx/c5-per-iteration-overhead-audit) | Pin timed code and audit prerequisites | `uv sync --frozen && uv run python repro/src/reproduce.py` | Claim 5 BLOCKED | local CPU, 4m25s |
+| [`orx/c2-c3-exact-task-availability-audit`](https://github.com/MachineLearning-Nerd/icml26-repro-ub9PwBtHqD-shapleig/tree/orx/c2-c3-exact-task-availability-audit) | Inventory 15 tasks; smoke exact public routes | `uv sync --frozen && uv run python repro/src/reproduce.py` | Claims 2–3 BLOCKED | local CPU, 4m45s |
+| [`orx/cumulative-five-claim-evidence-gate`](https://github.com/MachineLearning-Nerd/icml26-repro-ub9PwBtHqD-shapleig/tree/orx/cumulative-five-claim-evidence-gate) | Package Claim 4 and rerun every accepted gate | `uv sync --frozen && uv run python repro/src/reproduce.py` | C1 VERIFIED; C4 FALSIFIED; C2/C3/C5 BLOCKED | local CPU, 6m10s |
+| [`orx/release-candidate-report-and-logbook`](https://github.com/MachineLearning-Nerd/icml26-repro-ub9PwBtHqD-shapleig/tree/orx/release-candidate-report-and-logbook) | Reader-facing report, notebook, protected Space candidate | `uv sync --frozen && uv run python repro/src/reproduce.py` | Release-gate run pending | local CPU |
+| `master` | Public publication surface | Not run as an experiment (publication surface) | Awaiting explicit release approval | — |
 
 ## Reproduce
 
 ```bash
-uv venv --python 3.12 .venv
-source .venv/bin/activate
-uv pip install -r requirements.txt
-python repro/src/fetch_vit9_games.py
-pytest -q repro/tests
-env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python repro/src/real_application.py --seeds 30 --budgets 16 24 32 48 64
-python repro/src/analyze_real_results.py
-python repro/src/plot_real_results.py
-python repro/src/verify_upstream_parity.py
+uv sync --frozen
+uv run python repro/src/reproduce.py
 ```
 
-The full CPU run took 517 seconds on four vCPUs. No GPU, model training, API, or
-paid service was used. The raw per-replicate data, aggregate tables, statistical
-analysis, plots, upstream parity report, and the original C1 evidence are under
-`outputs/`.
+The command downloads and hash-checks the 30 pinned public games, runs the
+tests, regenerates raw results and figures, runs independent claim checkers,
+and exits nonzero on a failed accepted gate. Evidence is under
+`.openresearch/artifacts/claim_1` through `.openresearch/artifacts/claim_5`.
 
-The GP-uncertainty ablation is a retained negative result: it has lower
-aggregate MSE than adaptive ShaplEIG at four of five budgets. This does not
-contradict the reproduced C2 comparison against state-of-the-art Shapley
-estimators, but it rules out a broader claim of universal acquisition-policy
-dominance.
+For the tutorial notebook:
 
-## Scope
+```bash
+uvx marimo edit notebooks/shapleig_claims.py
+uvx marimo run notebooks/shapleig_claims.py
+```
 
-This is a paper-comparable full reproduction of one released costly application,
-not a rerun of every task family in the paper. Exact precomputed inference values
-are used in the same way as the authors’ released configuration; all 512 values
-are used only to establish ground truth, while estimators receive their stated
-query budgets.
+The notebook embeds small accepted results and does not trigger the formal
+experiment.
+
+## Scope and limitations
+
+The paper source is pinned by SHA-256 and theorem/figure anchors. The public
+task inventory contains six complete precomputed tasks and three executable
+tree tasks. Exact reproduction of the remaining TabPFN and YAHPO tasks needs
+unpublished/manual inputs and a different author runtime contract. Adaptive GP
+choices are sensitive to near-tied floating-point scores, although the Claim 4
+budget-level outcome is stable across the judged and cumulative runs. No score
+increase is claimed; only a future live judge can change the judged score.

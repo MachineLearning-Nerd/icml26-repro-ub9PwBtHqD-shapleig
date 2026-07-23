@@ -1,0 +1,12 @@
+{
+  "verdict": "BLOCKED",
+  "scope_audit": "../claim_2/result.json",
+  "retained_performance_evidence": {
+    "tasks": 1,
+    "families": 1,
+    "replicates": 30,
+    "maximum_budget": 64,
+    "promoted_to_full_scale": false
+  },
+  "reason": "no 15-task matched performance matrix exists under the frozen contract"
+}

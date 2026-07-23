@@ -1,0 +1,115 @@
+{
+  "claim_2_verdict": "BLOCKED",
+  "claim_3_verdict": "BLOCKED",
+  "paper_scope": {
+    "tasks": 15,
+    "families": 4,
+    "task_players": [
+      10,
+      8,
+      8,
+      10,
+      10,
+      10,
+      16,
+      16,
+      8,
+      60,
+      79,
+      101,
+      14,
+      9,
+      16
+    ],
+    "maximum_budget": 512
+  },
+  "availability": {
+    "runnable_tasks": 9,
+    "blocked_tasks": 6,
+    "blocked_task_ids": [
+      "fi_tabpfn_diabetes_regression",
+      "fi_tabpfn_diabetes",
+      "fi_tabpfn_breast_cancer",
+      "hpi_xgboost_chess",
+      "hpi_xgboost_thyroid",
+      "hpi_lcbench_jasmine"
+    ],
+    "runnable_families": [
+      "data_valuation",
+      "local_explanation"
+    ],
+    "precomputed_repetitions": {
+      "dv_rf_bike_sharing": 30,
+      "dv_gb_bike_sharing": 30,
+      "dv_gb_california_housing": 30,
+      "le_resnet_imagenet": 30,
+      "le_vit9_imagenet": 30,
+      "le_vit16_imagenet": 30
+    },
+    "tree_constructor_smoke": {
+      "le_rf_corrgroups60": {
+        "passed": true,
+        "expected_players": 60,
+        "observed_players": 60,
+        "rows": 1000,
+        "seed": 1,
+        "rf_estimators": 10,
+        "max_depth_used": 32,
+        "empty_value": 0.0017722112801361065,
+        "grand_value": 1.9836285207746052,
+        "seconds": 0.5261155419866554
+      },
+      "le_rf_nhanes": {
+        "passed": true,
+        "expected_players": 79,
+        "observed_players": 79,
+        "rows": 14264,
+        "seed": 1,
+        "rf_estimators": 10,
+        "max_depth_used": 32,
+        "empty_value": -9.156870340508075,
+        "grand_value": -9.241666666666667,
+        "seconds": 12.971557500015479
+      },
+      "le_rf_crime": {
+        "passed": true,
+        "expected_players": 101,
+        "observed_players": 101,
+        "rows": 1994,
+        "seed": 1,
+        "rf_estimators": 10,
+        "max_depth_used": 32,
+        "empty_value": 582.6868248871049,
+        "grand_value": 116.121,
+        "seconds": 3.225185249990318
+      }
+    },
+    "public_manifest": {
+      "url": "https://api.github.com/repos/mmschlk/shapiq/git/trees/799cfd0f2c32f17446130247a7ac3519e68cce82?recursive=1",
+      "commit": "799cfd0f2c32f17446130247a7ac3519e68cce82",
+      "response_sha256": "ba82cc7dad38845b6823a32ac03487a4f5e204462093de6b6d7f2663e9ee3512",
+      "blob_paths": 2628
+    }
+  },
+  "retained_performance_evidence": {
+    "tasks": 1,
+    "families": 1,
+    "replicates": 30,
+    "maximum_budget": 64,
+    "promoted_to_full_scale": false
+  },
+  "blocking_reasons": {
+    "feature_importance": "author-only TabPFN precomputations and absent TabPFN runtime",
+    "hyperparameter_importance": "absent YAHPO runtime and manually provisioned surrogate metadata",
+    "claim_3": "no 15-task matched performance matrix exists under the frozen contract"
+  },
+  "environment": {
+    "fixed_command": "uv sync --frozen && uv run python repro/src/reproduce.py",
+    "python": "3.12.11",
+    "git_sha": "05258258c9e7da4b7e4eac0699c241b0060fd5fa"
+  },
+  "negative_control": {
+    "mutation": "delete one public manifest entry from dv_rf_bike_sharing",
+    "missing_manifest_entry_detected": true
+  }
+}

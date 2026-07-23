@@ -1,0 +1,16 @@
+task_id,family,model,dataset,players,repetitions,route
+fi_tabpfn_diabetes_regression,feature_importance,TabPFN,Diabetes (Reg.),10,100,blocked
+fi_tabpfn_diabetes,feature_importance,TabPFN,Diabetes,8,100,blocked
+fi_tabpfn_breast_cancer,feature_importance,TabPFN,Breast Cancer,8,100,blocked
+dv_rf_bike_sharing,data_valuation,RF,Bike Sharing,10,30,precomputed
+dv_gb_bike_sharing,data_valuation,GB,Bike Sharing,10,30,precomputed
+dv_gb_california_housing,data_valuation,GB,California Housing,10,30,precomputed
+hpi_xgboost_chess,hyperparameter_importance,XGBoost,Chess,16,100,blocked
+hpi_xgboost_thyroid,hyperparameter_importance,XGBoost,Thyroid,16,100,blocked
+hpi_lcbench_jasmine,hyperparameter_importance,LCBench,Jasmine,8,100,blocked
+le_rf_corrgroups60,local_explanation,RF,CorrGroups60,60,30,tree
+le_rf_nhanes,local_explanation,RF,NHANES,79,30,tree
+le_rf_crime,local_explanation,RF,Crime,101,30,tree
+le_resnet_imagenet,local_explanation,ResNet,ImageNet,14,30,precomputed
+le_vit9_imagenet,local_explanation,ViT (9 patches),ImageNet,9,30,precomputed
+le_vit16_imagenet,local_explanation,ViT (16 patches),ImageNet,16,30,precomputed

@@ -1,0 +1,9 @@
+{
+  "source_hashes_recorded": true,
+  "live_blocking_reasons": [
+    "author and frozen Python contracts are incompatible",
+    "missing author runtime modules: torch, gpytorch, botorch, hydra, yahpo_gym, tabpfn",
+    "manually provisioned author task data are incomplete"
+  ],
+  "verifier_exit": 0
+}

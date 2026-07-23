@@ -1,0 +1,26 @@
+{
+  "claim_id": 1,
+  "source": {
+    "paper": "arXiv:2606.02247v1",
+    "anchors": [
+      "S3.SS4.SSS0.Px1",
+      "S3.Thmtheorem1",
+      "A2.SS4"
+    ],
+    "source_sha256": "81809d39fa180bab590aa3eb2c3a0c37ac3d17df20c91ac47dc4f805c981dff1"
+  },
+  "contract": {
+    "closed_form_scope": "EIG for one binary candidate under the paper's weighted Hamming GP and Gaussian-noise assumptions",
+    "per_candidate_bound": "O(p^4 + t^3)",
+    "candidate_set_bound": "O(p^4 + t^3 + |W| t^2)",
+    "naive_bound": "O(4^p t)",
+    "acceptance": [
+      "Efficient and explicit EIG agree to <=1e-7 for at least p=3..9 and three deterministic seeds.",
+      "The efficient route completes p=101 without allocating any 2^p object.",
+      "Executable operation counts for the dominant ESP route have log-log slope in [3.5, 4.35].",
+      "Explicit-route modeled memory is exponential in p with R^2 >=0.90.",
+      "A 0.1% output corruption is rejected by the same tolerance."
+    ]
+  },
+  "allowed_verdicts": ["VERIFIED", "FALSIFIED", "BLOCKED"]
+}

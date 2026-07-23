@@ -1,0 +1,23 @@
+{
+  "claim_id": 5,
+  "source": {
+    "paper": "arXiv:2606.02247v1",
+    "anchors": ["S5.SS2.SSS0.Px2", "A4.SS2.SSS2", "A4.F5", "A4.F6"],
+    "source_sha256": "81809d39fa180bab590aa3eb2c3a0c37ac3d17df20c91ac47dc4f805c981dff1"
+  },
+  "contract": {
+    "verified": [
+      "Run the authors' timed gp.fit() and vectorized EIGFunctionProperty blocks.",
+      "Cover all 15 task configurations and their evaluation budgets through 512.",
+      "Use the authors' locked implementation and task data.",
+      "Report repetition means and SEM and reproduce the stated thresholds."
+    ],
+    "falsified": [
+      "Under the same implementation, task inputs, budgets, and CPU protocol, a reported threshold is contradicted with uncertainty."
+    ],
+    "blocked": [
+      "An exact required implementation or task input is unavailable under the immutable environment contract."
+    ]
+  },
+  "allowed_verdicts": ["VERIFIED", "FALSIFIED", "BLOCKED"]
+}

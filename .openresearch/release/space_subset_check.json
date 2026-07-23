@@ -1,0 +1,17 @@
+{
+  "judged_revision": "85ca787e52cd4ba933883116d010d919bfe54fe7",
+  "old_path_count": 21,
+  "candidate_path_count": 68,
+  "old_file_set_is_subset": true,
+  "missing_old_paths": [],
+  "unchanged_old_paths_except_additive_index": true,
+  "changed_old_paths_except_logbook_json": [],
+  "logbook_json_modified_additively": true,
+  "upload_path_count": 48,
+  "all_uploads_utf8": true,
+  "utf8_errors": [],
+  "nul_files": [],
+  "all_json_valid": true,
+  "json_errors": [],
+  "secret_pattern_file_count": 0
+}

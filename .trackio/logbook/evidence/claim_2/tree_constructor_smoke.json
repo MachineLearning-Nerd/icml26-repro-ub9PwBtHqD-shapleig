@@ -1,0 +1,38 @@
+{
+  "le_rf_corrgroups60": {
+    "passed": true,
+    "expected_players": 60,
+    "observed_players": 60,
+    "rows": 1000,
+    "seed": 1,
+    "rf_estimators": 10,
+    "max_depth_used": 32,
+    "empty_value": 0.0017722112801361065,
+    "grand_value": 1.9836285207746052,
+    "seconds": 0.5261155419866554
+  },
+  "le_rf_nhanes": {
+    "passed": true,
+    "expected_players": 79,
+    "observed_players": 79,
+    "rows": 14264,
+    "seed": 1,
+    "rf_estimators": 10,
+    "max_depth_used": 32,
+    "empty_value": -9.156870340508075,
+    "grand_value": -9.241666666666667,
+    "seconds": 12.971557500015479
+  },
+  "le_rf_crime": {
+    "passed": true,
+    "expected_players": 101,
+    "observed_players": 101,
+    "rows": 1994,
+    "seed": 1,
+    "rf_estimators": 10,
+    "max_depth_used": 32,
+    "empty_value": 582.6868248871049,
+    "grand_value": 116.121,
+    "seconds": 3.225185249990318
+  }
+}

@@ -11,12 +11,49 @@
     "icml2026-repro",
     "paper-ub9PwBtHqD"
   ],
-  "updated_at": "2026-07-18T10:44:09+00:00",
+  "updated_at": "2026-07-23T08:40:00+00:00",
   "root": {
     "slug": "index",
     "title": "Repro - ShaplEIG (Bayesian Design for Shapley)",
     "file": "pages/index.md",
     "children": [
+      {
+        "slug": "claim-by-claim-campaign",
+        "title": "2026-07-23 claim-by-claim campaign",
+        "file": "pages/claim-by-claim-campaign/page.md",
+        "children": [
+          {
+            "slug": "claim-1-complexity",
+            "title": "Claim 1 — Complexity verification",
+            "file": "pages/claim-1-complexity/page.md",
+            "children": []
+          },
+          {
+            "slug": "claims-2-3-scope",
+            "title": "Claims 2–3 — Exact scope audit",
+            "file": "pages/claims-2-3-scope/page.md",
+            "children": []
+          },
+          {
+            "slug": "claim-4-gp-ablation",
+            "title": "Claim 4 — GP ablation falsification",
+            "file": "pages/claim-4-gp-ablation/page.md",
+            "children": []
+          },
+          {
+            "slug": "claim-5-overhead",
+            "title": "Claim 5 — Overhead blocker",
+            "file": "pages/claim-5-overhead/page.md",
+            "children": []
+          },
+          {
+            "slug": "release-evidence",
+            "title": "Release evidence and limitations",
+            "file": "pages/release-evidence/page.md",
+            "children": []
+          }
+        ]
+      },
       {
         "slug": "claim-1-closed-form-eig",
         "title": "Claim 1 — Closed-form EIG",
@@ -56,5 +93,5 @@
     ]
   },
   "agent_view_tokens": 4119,
-  "revision": "1784371449147930227"
+  "revision": "1784620933367501323"
 }

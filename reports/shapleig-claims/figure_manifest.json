@@ -1,0 +1,18 @@
+{
+  "reports/shapleig-claims/images/claim4_ablation.png": {
+    "sha256": "85999a8f371e692ebb591a02f6468a1237601bcbfe18a5ee20f22beef0bd266c",
+    "bytes": 137950
+  },
+  "reports/shapleig-claims/images/claim1_scaling.png": {
+    "sha256": "a46b712ba4f136e1b4ab9c5a53b1896a453a949513260810573c97c406dbca69",
+    "bytes": 116066
+  },
+  "reports/shapleig-claims/images/scope_coverage.png": {
+    "sha256": "74a638afd41c8fa56f568177292702abb0aa04a5aa42d0474bbf57a2250ffa66",
+    "bytes": 48700
+  },
+  "reports/shapleig-claims/images/claim3_retained_task.png": {
+    "sha256": "0249d204c11576bc347ae508f0540ddba3484ca427acd72889dda3928efc680e",
+    "bytes": 119982
+  }
+}
