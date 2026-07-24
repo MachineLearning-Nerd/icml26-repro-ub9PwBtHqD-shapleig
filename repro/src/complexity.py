@@ -80,39 +80,33 @@ def kernel_points(
 def akz_esp(
     W: np.ndarray, alpha: np.ndarray, beta: np.ndarray
 ) -> np.ndarray:
-    """Compute A K(Z,W) without enumerating Z, using Theorem B.1."""
+    """Compute A K(Z,W) without enumerating Z.
+
+    The reciprocal-binomial Shapley sum is an integral of a degree-(p-1)
+    polynomial. Gauss-Legendre quadrature with ceil(p/2) nodes is exact for
+    that degree and evaluates all p leave-one-factor-out integrals in O(p^2)
+    per row. This is numerically more stable than polynomial division.
+    """
     W = np.asarray(W, dtype=np.int8)
     p = len(alpha)
-    w_in, w_out = shapley_weights(p)
+    nodes, quadrature_weights = np.polynomial.legendre.leggauss((p + 1) // 2)
+    nodes = (nodes + 1.0) / 2.0
+    quadrature_weights = quadrature_weights / 2.0
     result = np.empty((p, len(W)))
     for row_idx, row in enumerate(W):
         gamma = np.where(row == 0, alpha, beta)
         delta = np.where(row == 0, beta, alpha)
-        polynomial = np.ones(1)
-        for j in range(p):
-            polynomial = np.convolve(polynomial, [gamma[j], delta[j]])
-        for j in range(p):
-            # Divide the full degree-p polynomial by the j-th linear factor.
-            # Choosing the recurrence anchored at the larger coefficient avoids
-            # unnecessary amplification. Each division is O(p), so all p
-            # exclusions cost O(p**2), rather than recomputing p convolutions.
-            excluded = np.empty(p)
-            if gamma[j] >= delta[j]:
-                excluded[0] = polynomial[0] / gamma[j]
-                for degree in range(1, p):
-                    excluded[degree] = (
-                        polynomial[degree] - delta[j] * excluded[degree - 1]
-                    ) / gamma[j]
-            else:
-                excluded[-1] = polynomial[-1] / delta[j]
-                for degree in range(p - 1, 0, -1):
-                    excluded[degree - 1] = (
-                        polynomial[degree] - gamma[j] * excluded[degree]
-                    ) / delta[j]
-            result[j, row_idx] = (
-                delta[j] * (excluded @ w_in[1:])
-                + gamma[j] * (excluded @ w_out[:-1])
-            )
+        factor_values = (
+            gamma[None, :] * (1.0 - nodes[:, None])
+            + delta[None, :] * nodes[:, None]
+        )
+        full_products = np.prod(factor_values, axis=1)
+        excluded_integrals = (
+            quadrature_weights[:, None]
+            * full_products[:, None]
+            / factor_values
+        ).sum(axis=0)
+        result[:, row_idx] = (delta - gamma) * excluded_integrals
     return result
 
 

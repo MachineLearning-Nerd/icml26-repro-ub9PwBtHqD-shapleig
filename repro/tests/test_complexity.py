@@ -31,7 +31,7 @@ def test_esp_aka_matches_explicit_coalition_grid(p):
 
 
 @pytest.mark.parametrize("p", [3, 4, 5, 8])
-def test_synthetic_division_akz_matches_explicit_grid(p):
+def test_quadrature_akz_matches_explicit_grid(p):
     rng = np.random.default_rng(260602247 + 100 * p)
     lengthscales = rng.uniform(0.6, 2.0, size=p)
     alpha, beta = kernel_parameters(lengthscales, outputscale=1.7)
@@ -42,6 +42,17 @@ def test_synthetic_division_akz_matches_explicit_grid(p):
     )
     polynomial = akz_esp(candidates, alpha, beta)
     assert np.max(np.abs(polynomial - explicit)) < 1e-9
+
+
+def test_efficient_route_is_stable_at_paper_maximum() -> None:
+    p, t = 101, 102
+    rng = np.random.default_rng(260602247)
+    observed = rng.integers(0, 2, size=(t, p), dtype=np.int8)
+    candidate = rng.integers(0, 2, size=p, dtype=np.int8)
+    lengthscales = rng.uniform(0.6, 2.0, size=p)
+    result = efficient_eig(observed, candidate, lengthscales)
+    assert np.isfinite(result.eig)
+    assert result.eig >= 0.0
 
 
 @pytest.mark.parametrize("p", [3, 4, 5])

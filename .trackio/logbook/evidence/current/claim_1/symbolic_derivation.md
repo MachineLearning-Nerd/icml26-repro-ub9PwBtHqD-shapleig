@@ -21,12 +21,18 @@ updates of arrays with `(p+1)^2 * 4 = O(p²)` entries. The contractions for at
 most `p` values of `j` also touch `O(p²)` entries. Therefore this block costs
 `O(p * p * p²) = O(p⁴)` time and `O(p³)` workspace.
 
-`akz_esp` first forms one degree-`p` elementary-symmetric polynomial per input
-row in `O(p²)` time. For each of its `p` factors it obtains the excluded
-degree-`p-1` polynomial by forward or backward synthetic division in `O(p)`
-time. Thus `A K(Z,X)` costs `O(t p²)`, and `A K(Z,W)` costs `O(|W| p²)`.
-The synthetic-division result is tested against explicit exclusion for
-`p={3,4,5,8}`.
+For `n=p-1`, the reciprocal-binomial identity
+
+`1 / C(n,k) = (n+1) ∫₀¹ x^k (1-x)^(n-k) dx`
+
+turns each leave-one-factor-out Shapley sum into the integral of
+`∏[gamma_r(1-x)+delta_r x]`, a degree-`p-1` polynomial. `akz_esp` evaluates
+this integral with `ceil(p/2)`-node Gauss–Legendre quadrature, which is exact
+for degree at most `2*ceil(p/2)-1`. At each node it forms all `p` factors once
+and obtains every excluded product by division by its positive factor. The
+work is `O(p²)` per input row, so `A K(Z,X)` costs `O(t p²)` and
+`A K(Z,W)` costs `O(|W| p²)`. The quadrature result is tested against explicit
+coalition enumeration for `p={3,4,5,8}`.
 
 The remaining per-candidate operations are a `t x t` kernel and Cholesky
 factorization, triangular solves, and products with `p` Shapley dimensions:
@@ -53,4 +59,3 @@ efficient implementation.
 The source-level loop bound covers every positive integer `p,t` under the
 listed model assumptions. The `p=3..9` equality checks and the `p=101`
 execution are finite corroboration, not a proof of the universal quantifier.
-

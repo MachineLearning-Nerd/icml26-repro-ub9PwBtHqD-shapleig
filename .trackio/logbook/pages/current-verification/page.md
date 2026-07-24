@@ -27,8 +27,8 @@ weighted-Hamming GP and Gaussian-noise assumptions, Theorem 3.1 states
 The current proof obligation is met by the
 [source-level symbolic certificate](../../evidence/current/claim_1/symbolic_derivation.md),
 not by fitting a slope to the claimed formula. It covers arbitrary positive
-`p,t`: the `A K Aᵀ` loops cost `O(p^4)`, synthetic division makes each
-`A K(Z,X)` row `O(p^2)`, and the Cholesky/solve path is bounded by
+`p,t`: the `A K Aᵀ` loops cost `O(p^4)`, exact polynomial quadrature makes
+each `A K(Z,X)` row `O(p^2)`, and the Cholesky/solve path is bounded by
 `O(t^3)`. Finite corroboration reports 21 explicit-coalition comparisons at
 `p=3..9` with maximum EIG error `4.540865461422072e-10`, and execution at
 `p=101,t=102`. The 0.1% EIG mutation is rejected.

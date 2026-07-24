@@ -32,24 +32,18 @@ def source_bound_errors(root: Path = ROOT) -> list[str]:
     akz = functions.get("akz_esp")
     if akz is None:
         return ["akz_esp is absent from the audited source"]
-    convolutions = [
+    quadrature_calls = [
         node
         for node in ast.walk(akz)
         if isinstance(node, ast.Call)
         and isinstance(node.func, ast.Attribute)
-        and node.func.attr == "convolve"
+        and node.func.attr == "leggauss"
     ]
-    if len(convolutions) != 1:
-        errors.append("akz_esp must form exactly one full polynomial per row")
-    if "excluded = np.empty(p)" not in ast.unparse(akz):
-        errors.append("akz_esp does not expose the O(p) synthetic-division buffer")
-    if not any(
-        isinstance(node, ast.For)
-        and isinstance(node.target, ast.Name)
-        and node.target.id == "degree"
-        for node in ast.walk(akz)
-    ):
-        errors.append("akz_esp synthetic-division recurrence is absent")
+    if len(quadrature_calls) != 1:
+        errors.append("akz_esp must construct one exact polynomial quadrature")
+    unparsed_akz = ast.unparse(akz)
+    if "factor_values" not in unparsed_akz or "excluded_integrals" not in unparsed_akz:
+        errors.append("akz_esp leave-one-factor-out quadrature is absent")
     efficient_names = ("akz_esp", "akazza_esp", "efficient_eig", "efficient_eig_batch")
     for name in efficient_names:
         node = functions.get(name)
@@ -64,7 +58,7 @@ def source_bound_errors(root: Path = ROOT) -> list[str]:
         certificate = certificate_path.read_text()
         for required in (
             "O(p⁴ + t³)",
-            "synthetic division",
+            "Gauss–Legendre",
             "every positive integer `p,t`",
             "finite corroboration, not a proof",
         ):

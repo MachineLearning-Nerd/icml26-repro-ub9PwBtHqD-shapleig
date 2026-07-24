@@ -22,14 +22,14 @@
     "naive_bound": "O(4^p t)",
     "primary_acceptance": [
       "Independently reconstruct the bound from every executable loop and matrix operation.",
-      "Use O(p) synthetic division for each excluded factor so A K(Z,X) is O(t p^2), not O(t p^3).",
+      "Use exact degree-(p-1) Gauss-Legendre integration with ceil(p/2) nodes so A K(Z,X) is O(t p^2), not O(t p^3).",
       "Show algebraically that every lower-order mixed term is bounded by O(p^4+t^3).",
       "Confirm the efficient source contains no 2^p allocation."
     ],
     "corroboration_only": [
       "Efficient and explicit EIG agree to <=1e-7 for p=3..9 and three seeds.",
       "The efficient route completes p=101.",
-      "The synthetic-division implementation matches explicit factor exclusion."
+      "The quadrature implementation matches explicit coalition enumeration."
     ],
     "negative_control": "A 0.1% EIG corruption must produce a nonzero verifier exit."
   },
