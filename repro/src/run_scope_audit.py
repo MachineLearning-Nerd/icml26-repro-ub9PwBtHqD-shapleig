@@ -132,7 +132,7 @@ def construct_tree_task(dataset_name: str, expected_p: int) -> dict:
     return {
         "passed": True,
         "expected_players": expected_p,
-        "observed_players": observed_p,
+        "observed_players": int(dataset_X.shape[1]),
         "rows": int(dataset_X.shape[0]),
         "seed": seed,
         "rf_estimators": 10,
