@@ -1,0 +1,7 @@
+{
+  "verifier_exit": 0,
+  "raw_rows": 6,
+  "maximum_players": 101,
+  "maximum_archive_size": 512,
+  "negative_control_detected": true
+}

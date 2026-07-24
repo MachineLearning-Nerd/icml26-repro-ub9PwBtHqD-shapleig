@@ -18,8 +18,21 @@
     "file": "pages/index.md",
     "children": [
       {
+        "slug": "current-verification",
+        "title": "CURRENT verification — evaluator entrypoint",
+        "file": "pages/current-verification/page.md",
+        "children": [
+          {
+            "slug": "current-claim-5",
+            "title": "CURRENT Claim 5 — large-game decomposed timing",
+            "file": "pages/current-claim-5/page.md",
+            "children": []
+          }
+        ]
+      },
+      {
         "slug": "claim-by-claim-campaign",
-        "title": "2026-07-23 claim-by-claim campaign",
+        "title": "Previous judged campaign (6/10)",
         "file": "pages/claim-by-claim-campaign/page.md",
         "children": [
           {
@@ -74,37 +87,37 @@
       },
       {
         "slug": "claim-1-closed-form-eig",
-        "title": "Claim 1 — Closed-form EIG",
+        "title": "Historical rejected baseline — Claim 1 closed-form EIG",
         "file": "pages/claim-1-closed-form-eig/page.md",
         "children": []
       },
       {
         "slug": "claim-2-greedy-acquisition",
-        "title": "Claim 2 — Greedy acquisition",
+        "title": "Historical rejected baseline — Claim 2 greedy acquisition",
         "file": "pages/claim-2-greedy-acquisition/page.md",
         "children": []
       },
       {
         "slug": "methods-environment",
-        "title": "Methods & environment",
+        "title": "Historical rejected baseline — Methods & environment",
         "file": "pages/methods-environment/page.md",
         "children": []
       },
       {
         "slug": "negative-controls",
-        "title": "Negative controls",
+        "title": "Historical rejected baseline — Negative controls",
         "file": "pages/negative-controls/page.md",
         "children": []
       },
       {
         "slug": "conclusion",
-        "title": "Conclusion",
+        "title": "Historical rejected baseline — Conclusion",
         "file": "pages/conclusion/page.md",
         "children": []
       },
       {
         "slug": "claim-2-real-imagenet-benchmark",
-        "title": "Claim 2 — Real ImageNet benchmark",
+        "title": "Historical rejected baseline — Claim 2 real ImageNet benchmark",
         "file": "pages/claim-2-real-imagenet-benchmark/page.md",
         "children": []
       }

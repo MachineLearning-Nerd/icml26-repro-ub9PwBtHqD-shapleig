@@ -1,0 +1,70 @@
+{
+  "review_mode": "candidate artifact and canonical entrypoints only",
+  "entrypoints_opened": [
+    "README.md",
+    "logbook.json"
+  ],
+  "navigation_first_child": {
+    "slug": "current-verification",
+    "title": "CURRENT verification \u2014 evaluator entrypoint",
+    "file": "pages/current-verification/page.md",
+    "children": [
+      {
+        "slug": "current-claim-5",
+        "title": "CURRENT Claim 5 \u2014 large-game decomposed timing",
+        "file": "pages/current-claim-5/page.md",
+        "children": []
+      }
+    ]
+  },
+  "files_opened_from_readme": [
+    "pages/current-verification/page.md"
+  ],
+  "files_opened_from_current_page": [
+    "evidence/current/environment/pyproject.toml",
+    "evidence/current/environment/uv.lock",
+    "evidence/current/source/repro",
+    "evidence/current/claim_1/symbolic_derivation.md",
+    "evidence/claim_1/source_audit.md",
+    "evidence/current/claim_1/claim_contract.json",
+    "evidence/claim_1/independent_comparison.csv",
+    "evidence/claim_1/scaling.csv",
+    "evidence/claim_1/independent_checker.json",
+    "evidence/claim_1/negative_control.json",
+    "evidence/current/source/repro/src/verify_claim1_complexity.py",
+    "evidence/claim_2/source_audit.md",
+    "evidence/claim_2/claim_contract.json",
+    "evidence/claim_2/executed_subset_raw.csv",
+    "evidence/claim_2/task_inventory.csv",
+    "evidence/claim_2/executed_subset_independent_checker.json",
+    "evidence/claim_2/executed_subset_negative_control.json",
+    "evidence/current/source/repro/src/verify_claim2_partial_scope.py",
+    "evidence/claim_3/source_audit.md",
+    "evidence/claim_3/claim_contract.json",
+    "evidence/claim_3/dv10_raw.csv",
+    "evidence/claim_3/dv10_statistics.json",
+    "evidence/claim_3/independent_checker.json",
+    "evidence/claim_3/negative_control.json",
+    "evidence/current/source/repro/src/verify_claim3_dv.py",
+    "evidence/claim_4/source_audit.md",
+    "evidence/claim_4/claim_contract.json",
+    "evidence/claim_4/ablation_raw.csv",
+    "evidence/claim_4/independent_checker.json",
+    "evidence/claim_4/negative_control.json",
+    "evidence/current/source/repro/src/verify_claim4_ablation.py",
+    "pages/current-claim-5/page.md",
+    "evidence/claim_5/source_audit.md",
+    "evidence/claim_5/claim_contract.json",
+    "evidence/current/claim_5/large_timing_raw.csv",
+    "evidence/current/claim_5/large_timing_summary.json",
+    "evidence/current/claim_5/large_timing_independent_checker.json",
+    "evidence/current/claim_5/large_timing_negative_control.json",
+    "evidence/current/source/repro/src/verify_claim5_large_timing.py",
+    "evidence/current/visibility_matrix.json",
+    "evidence/current/blind_review.json",
+    "evidence/current/negative_verifier_exits.json"
+  ],
+  "unresolved_links": [],
+  "conclusions_not_verifiable": [],
+  "historical_pages_used_for_orientation": false
+}

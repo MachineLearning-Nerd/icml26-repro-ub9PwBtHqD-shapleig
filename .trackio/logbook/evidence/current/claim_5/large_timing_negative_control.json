@@ -1,0 +1,8 @@
+{
+  "mutation": "delete the p=101, t=512 timing cell",
+  "detected": true,
+  "errors": [
+    "expected 6 rows, got 5",
+    "large-task/replicate/archive grid mismatch"
+  ]
+}

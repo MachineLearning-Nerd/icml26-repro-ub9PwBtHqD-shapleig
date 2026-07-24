@@ -1,0 +1,63 @@
+{
+  "verdict": "BLOCKED",
+  "partial_assessment": "SOURCE_MATCHED_LARGE_SUBSET",
+  "tasks": 3,
+  "paper_tasks": 15,
+  "families": [
+    "local_explanation"
+  ],
+  "paper_families": 4,
+  "players": [
+    60,
+    79,
+    101
+  ],
+  "maximum_players": 101,
+  "archive_sizes": {
+    "le_rf_corrgroups60": [
+      61,
+      512
+    ],
+    "le_rf_nhanes": [
+      80,
+      512
+    ],
+    "le_rf_crime": [
+      102,
+      512
+    ]
+  },
+  "maximum_archive_size": 512,
+  "source_candidate_pool": 1024,
+  "candidate_policy": "author scalable-mode uniform-cardinality PolySHAP sampler with pairing trick; fixed 1024-coalition subset",
+  "fit_policy": "five-restart cold-start ARD Hamming-GP MAP fit",
+  "source": "slds-lmu/shapleig@162ce44fe380c7c11b959fc85206b5dcdeddff58",
+  "source_configurations": [
+    "shapleig_crv_tree_corrgroup.yaml",
+    "shapleig_crv_tree_nhanesi.yaml",
+    "shapleig_crv_tree_crime.yaml"
+  ],
+  "raw_rows": 6,
+  "observed_maxima": {
+    "hp_fit_seconds": 280.9886079170001,
+    "eig_seconds": 19.10969062500044
+  },
+  "threshold_checks": {
+    "all_eig_below_30_seconds": true,
+    "all_fit_below_1500_seconds": true
+  },
+  "elapsed_seconds": 629.6420398339997,
+  "environment": {
+    "fixed_command": "uv sync --frozen && uv run python repro/src/reproduce.py",
+    "python": "3.12.11",
+    "platform": "macOS-26.5.2-arm64-arm-64bit",
+    "logical_cpus": 8,
+    "git_sha": "28a032544535798b884e930407e292e9671fd6e2"
+  },
+  "limitations": [
+    "This directly covers the three paper tasks above 16 players, not all 15 tasks.",
+    "One deterministic paper seed is measured; the paper averages 30 repetitions with SEM.",
+    "The NumPy/SciPy port is equation- and configuration-matched, but it is not the author Torch/BoTorch runtime.",
+    "The t=512 archive uses the deterministic prefix of the author-sampled candidate pool, not a full 451/432/410-step EIG-selected trajectory."
+  ]
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "claim": "C1",
+    "exit_code": 1,
+    "nonzero_as_required": true,
+    "output": "{\n  \"verifier\": \"claim_1\",\n  \"errors\": [\n    \"efficient EIG disagrees with explicit covariance route\"\n  ]\n}\n"
+  },
+  {
+    "claim": "C2",
+    "exit_code": 1,
+    "nonzero_as_required": true,
+    "output": "{\n  \"verifier\": \"claim_2_partial_scope\",\n  \"raw_rows\": 599,\n  \"tasks\": 4,\n  \"families\": 2,\n  \"replicates_per_task\": 30,\n  \"maximum_budget\": 64,\n  \"aggregate_cells\": 20,\n  \"errors\": [\n    \"expected 600 exact cells, got 599\",\n    \"mean mismatch ('dv_gb_bike_sharing', 16)\"\n  ]\n}\n"
+  },
+  {
+    "claim": "C3",
+    "exit_code": 1,
+    "nonzero_as_required": true,
+    "output": "{\n  \"verifier_exit\": 1,\n  \"errors\": [\n    \"expected 2250 rows, got 2249\",\n    \"verdict FALSIFIED disagrees with raw evidence BLOCKED\",\n    \"reported counterexample cells disagree with raw-data recomputation\"\n  ],\n  \"raw_rows\": 2249,\n  \"recomputed_comparisons\": 0,\n  \"recomputed_counterexamples\": []\n}\n"
+  },
+  {
+    "claim": "C4",
+    "exit_code": 1,
+    "nonzero_as_required": true,
+    "output": "{\n  \"verifier\": \"claim_4_ablation_raw_recomputation\",\n  \"errors\": [\n    \"incomplete raw grid: missing=1, extra=0\"\n  ]\n}\n"
+  },
+  {
+    "claim": "C5",
+    "exit_code": 1,
+    "nonzero_as_required": true,
+    "output": "{\n  \"verifier\": \"claim_5_large_timing\",\n  \"raw_rows\": 5,\n  \"tasks\": 3,\n  \"maximum_players\": 101,\n  \"maximum_archive_size\": 512,\n  \"errors\": [\n    \"expected 6 exact cells, got 5\"\n  ]\n}\n"
+  }
+]
