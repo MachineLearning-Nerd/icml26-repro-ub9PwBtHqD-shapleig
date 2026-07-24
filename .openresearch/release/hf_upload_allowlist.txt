@@ -1,6 +1,14 @@
 README.md
 evidence/current/blind_review.json
+evidence/current/claim_1/EVAL.md
 evidence/current/claim_1/claim_contract.json
+evidence/current/claim_1/independent_checker.json
+evidence/current/claim_1/independent_comparison.csv
+evidence/current/claim_1/method.md
+evidence/current/claim_1/negative_control.json
+evidence/current/claim_1/result.json
+evidence/current/claim_1/scaling.csv
+evidence/current/claim_1/source_audit.md
 evidence/current/claim_1/symbolic_derivation.md
 evidence/current/claim_5/large_timing_independent_checker.json
 evidence/current/claim_5/large_timing_negative_control.json

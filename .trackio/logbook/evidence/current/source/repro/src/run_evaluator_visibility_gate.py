@@ -139,6 +139,85 @@ def resolve_links(page: Path) -> tuple[list[str], list[str]]:
     return opened, missing
 
 
+def inline_numeric_errors() -> list[str]:
+    """Recompute the principal inline numbers from linked raw/result files."""
+    errors: list[str] = []
+    current_text = CURRENT.read_text()
+    c5_text = (BOOK / "pages" / "current-claim-5" / "page.md").read_text()
+    c1 = json.loads((EVIDENCE / "claim_1" / "result.json").read_text())
+    c1_error = str(c1["independent_checker"]["maximum_absolute_error"])
+    if c1_error not in current_text:
+        errors.append("C1 inline maximum error differs from current result JSON")
+
+    c2 = json.loads(
+        (BOOK / "evidence" / "claim_2" / "executed_subset_summary.json").read_text()
+    )
+    scope = c2["executed_scope"]
+    for value in (
+        f"**{scope['tasks']} tasks, {scope['families']} families",
+        f"budgets {', '.join(map(str, scope['budgets']))}",
+        f"({scope['raw_rows']} complete task-budget-game cells)",
+    ):
+        if value not in current_text:
+            errors.append(f"C2 inline scope mismatch: {value}")
+
+    c3 = json.loads((BOOK / "evidence" / "claim_3" / "result.json").read_text())
+    names = {
+        "dv_rf_bike_sharing": "Bike Sharing / RF",
+        "dv_gb_bike_sharing": "Bike Sharing / GB",
+        "dv_gb_california_housing": "California Housing / GB",
+    }
+    for row in c3["counterexamples"]:
+        if row["budget"] != 16 or row["baseline"] != "RegressionMSR":
+            continue
+        expected = (
+            f"| {names[row['task_id']]} | {row['shapleig_mean_mse']:.6f} | "
+            f"{row['baseline_mean_mse']:.6f} | "
+            f"{row['geometric_mean_ratio_shapleig_over_baseline']:.3f} "
+            f"[{row['bootstrap_ratio_95ci'][0]:.3f}, "
+            f"{row['bootstrap_ratio_95ci'][1]:.3f}] | "
+            f"{row['holm_adjusted_p']:.6g} |"
+        )
+        if expected not in current_text:
+            errors.append(f"C3 inline row differs from result JSON: {row['task_id']}")
+
+    c4 = json.loads((BOOK / "evidence" / "claim_4" / "result.json").read_text())
+    c4_evidence = c4["evidence"]
+    for budget in (16, 24, 32, 48, 64):
+        means = c4_evidence["aggregate_mean_mse"][str(budget)]
+        lower = (
+            "GP+Uncertainty"
+            if means["GP-uncertainty"] < means["ShaplEIG"]
+            else "ShaplEIG"
+        )
+        expected = (
+            f"| {budget} | {means['ShaplEIG']:.7f} | "
+            f"{means['GP-uncertainty']:.7f} | {lower} |"
+        )
+        if expected not in current_text:
+            errors.append(f"C4 inline row differs from raw reconstruction: {budget}")
+
+    with (EVIDENCE / "claim_5" / "large_timing_raw.csv").open(newline="") as handle:
+        c5_rows = list(csv.DictReader(handle))
+    labels = {
+        "le_rf_corrgroups60": "CorrGroups60",
+        "le_rf_nhanes": "NHANES",
+        "le_rf_crime": "Crime",
+    }
+    for row in c5_rows:
+        expected = (
+            f"| {labels[row['task_id']]} | {row['players']} | "
+            f"{row['archive_size']} | {float(row['hp_fit_seconds']):.9f} | "
+            f"{float(row['eig_seconds']):.9f} |"
+        )
+        if expected not in c5_text:
+            errors.append(
+                f"C5 inline row differs from raw CSV: "
+                f"{row['task_id']}/t={row['archive_size']}"
+            )
+    return errors
+
+
 def main() -> None:
     readme = BOOK / "README.md"
     logbook_path = BOOK / "logbook.json"
@@ -198,7 +277,7 @@ def main() -> None:
         "files_opened_from_readme": readme_opened,
         "files_opened_from_current_page": current_opened,
         "unresolved_links": sorted(set(readme_missing + current_missing)),
-        "conclusions_not_verifiable": [],
+        "conclusions_not_verifiable": inline_numeric_errors(),
         "historical_pages_used_for_orientation": False,
     }
     (EVIDENCE / "blind_review.json").write_text(json.dumps(trace, indent=2) + "\n")
@@ -210,6 +289,7 @@ def main() -> None:
         failures.append("current verifier is not first in logbook navigation")
     if current_missing or readme_missing:
         failures.append(f"unresolved canonical links: {trace['unresolved_links']}")
+    failures.extend(trace["conclusions_not_verifiable"])
     if not all(item["nonzero_as_required"] for item in negative):
         failures.append("one or more corrupted artifacts produced a zero exit")
     required_cells = (

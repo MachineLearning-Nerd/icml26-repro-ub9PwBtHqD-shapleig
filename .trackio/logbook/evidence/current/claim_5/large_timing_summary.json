@@ -39,20 +39,20 @@
   ],
   "raw_rows": 6,
   "observed_maxima": {
-    "hp_fit_seconds": 280.9886079170001,
-    "eig_seconds": 19.10969062500044
+    "hp_fit_seconds": 247.82472941599917,
+    "eig_seconds": 11.584338083999683
   },
   "threshold_checks": {
     "all_eig_below_30_seconds": true,
     "all_fit_below_1500_seconds": true
   },
-  "elapsed_seconds": 629.6420398339997,
+  "elapsed_seconds": 696.7057171670003,
   "environment": {
     "fixed_command": "uv sync --frozen && uv run python repro/src/reproduce.py",
     "python": "3.12.11",
     "platform": "macOS-26.5.2-arm64-arm-64bit",
     "logical_cpus": 8,
-    "git_sha": "28a032544535798b884e930407e292e9671fd6e2"
+    "git_sha": "4f40cf95412121cb07d5e4a1c30f22e5ed890978"
   },
   "limitations": [
     "This directly covers the three paper tasks above 16 players, not all 15 tasks.",

@@ -1,7 +1,7 @@
 {
   "judged_revision": "85ca787e52cd4ba933883116d010d919bfe54fe7",
   "old_path_count": 21,
-  "candidate_path_count": 141,
+  "candidate_path_count": 149,
   "old_file_set_is_subset": true,
   "missing_old_paths": [],
   "unchanged_old_paths_except_mutable_entrypoints": true,
@@ -14,7 +14,7 @@
   "changed_published_paths_except_mutable_entrypoints": [],
   "logbook_json_modified_additively": true,
   "missing_historical_page_references": [],
-  "upload_path_count": 60,
+  "upload_path_count": 68,
   "upload_allowlist_matches_changed_text_set": true,
   "upload_allowlist_mismatch": [],
   "unsafe_allowlist_paths": [],

@@ -1,0 +1,6 @@
+{
+  "mutation": "multiply one efficient EIG by 1.001",
+  "corrupted_absolute_error": 0.0014325860202051288,
+  "threshold": 1e-07,
+  "corruption_detected": true
+}
