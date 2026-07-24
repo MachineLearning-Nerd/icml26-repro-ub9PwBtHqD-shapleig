@@ -88,17 +88,15 @@ def public_manifest() -> tuple[bytes, list[str]]:
     return payload, paths
 
 
-def construct_tree_task(dataset_name: str, expected_p: int) -> dict:
+def build_tree_game(dataset_name: str, expected_p: int, seed: int):
     import shap
     from sklearn.ensemble import RandomForestRegressor
     from shapiq_games.benchmark.treeshapiq_xai.base import TreeSHAPIQXAI
 
-    started = time.perf_counter()
     dataset_X, dataset_y = getattr(shap.datasets, dataset_name)()
     observed_p = int(dataset_X.shape[1])
     if observed_p != expected_p:
         raise AssertionError(f"{dataset_name}: expected {expected_p}, got {observed_p}")
-    seed = 1
     x_train = dataset_X.drop(dataset_X.index[[seed]]).to_numpy()
     y_array = np.asarray(dataset_y)
     y_train = np.delete(y_array, seed, axis=0)
@@ -118,6 +116,13 @@ def construct_tree_task(dataset_name: str, expected_p: int) -> dict:
             continue
     if game is None:
         raise RuntimeError(f"{dataset_name}: every author depth fallback failed")
+    return game, dataset_X, used_depth
+
+
+def construct_tree_task(dataset_name: str, expected_p: int) -> dict:
+    started = time.perf_counter()
+    seed = 1
+    game, dataset_X, used_depth = build_tree_game(dataset_name, expected_p, seed)
     coalitions = np.stack(
         [np.zeros(expected_p, dtype=bool), np.ones(expected_p, dtype=bool)]
     )

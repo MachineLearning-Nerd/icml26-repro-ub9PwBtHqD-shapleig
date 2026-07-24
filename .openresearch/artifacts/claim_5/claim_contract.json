@@ -17,6 +17,11 @@
     ],
     "blocked": [
       "An exact required implementation or task input is unavailable under the immutable environment contract."
+    ],
+    "large_subset_support": [
+      "Directly time the three exact public p=60, 79, and 101 tree tasks.",
+      "Use the pinned 1024-candidate scalable configuration and budgets through 512.",
+      "Keep the full verdict BLOCKED unless all 15 tasks, repetitions, and author runtime are covered."
     ]
   },
   "allowed_verdicts": ["VERIFIED", "FALSIFIED", "BLOCKED"]

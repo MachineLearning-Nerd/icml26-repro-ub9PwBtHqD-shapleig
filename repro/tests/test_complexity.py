@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 from complexity import (
     akazza_esp,
     efficient_eig,
+    efficient_eig_batch,
     kernel_parameters,
     kernel_points,
     naive_eig,
@@ -38,3 +39,19 @@ def test_polynomial_eig_matches_explicit_posterior(p):
     efficient = efficient_eig(observed, candidate, lengthscales).eig
     explicit, _ = naive_eig(observed, candidate, lengthscales)
     assert abs(efficient - explicit) < 1e-7
+
+
+@pytest.mark.parametrize("p", [3, 4, 5])
+def test_vectorized_eig_matches_independent_explicit_posterior(p):
+    rng = np.random.default_rng(260602247 + 10 * p)
+    masks = rng.choice(1 << p, size=p + 4, replace=False)
+    observed = ((masks[: p + 1, None] >> np.arange(p)) & 1).astype(np.int8)
+    candidates = (
+        (masks[p + 1 :, None] >> np.arange(p)) & 1
+    ).astype(np.int8)
+    lengthscales = rng.uniform(0.6, 2.0, size=p)
+    batch = efficient_eig_batch(observed, candidates, lengthscales).scores
+    explicit = np.array(
+        [naive_eig(observed, row, lengthscales)[0] for row in candidates]
+    )
+    assert np.max(np.abs(batch - explicit)) < 1e-7

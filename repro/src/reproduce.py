@@ -111,6 +111,7 @@ def main() -> None:
     run(sys.executable, "repro/src/run_complexity_claim.py")
     run(sys.executable, "repro/src/run_claim5_audit.py")
     run(sys.executable, "repro/src/run_claim5_partial_timing.py")
+    run(sys.executable, "repro/src/run_claim5_large_timing.py")
     run(sys.executable, "repro/src/run_scope_audit.py")
     run(sys.executable, "repro/src/run_claim3_dv_audit.py")
     run(sys.executable, "repro/src/run_claim2_partial_scope.py")

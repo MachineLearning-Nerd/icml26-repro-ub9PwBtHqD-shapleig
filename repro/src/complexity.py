@@ -21,6 +21,13 @@ class EIGResult:
     efficient_peak_bytes: int
 
 
+@dataclass
+class EIGBatchResult:
+    scores: np.ndarray
+    aka_operations: int
+    efficient_peak_bytes: int
+
+
 def shapley_weights(p: int, *, signed: bool = True) -> tuple[np.ndarray, np.ndarray]:
     """Return Shapley weights indexed by coalition size."""
     w_in = np.zeros(p + 1)
@@ -272,6 +279,58 @@ def efficient_eig(
         + b.nbytes
     )
     return EIGResult(eig=eig, aka_operations=operations, efficient_peak_bytes=live_bytes)
+
+
+def efficient_eig_batch(
+    observed: np.ndarray,
+    candidates: np.ndarray,
+    lengthscales: np.ndarray,
+    *,
+    outputscale: float = 1.7,
+    noise: float = 1e-6,
+) -> EIGBatchResult:
+    """Vectorized closed-form EIG for a fixed candidate subset.
+
+    This is the scalable acquisition path used by the paper's large-game
+    configurations: the polynomial Shapley contractions are shared across all
+    candidates and no ``2**p`` coalition grid is constructed.
+    """
+    observed = np.asarray(observed, dtype=np.int8)
+    candidates = np.asarray(candidates, dtype=np.int8)
+    alpha, beta = kernel_parameters(lengthscales, outputscale)
+    aka, operations, live_bytes = akazza_esp(alpha, beta)
+    akx = akz_esp(observed, alpha, beta)
+    akw = akz_esp(candidates, alpha, beta)
+    kxx = kernel_points(observed, observed, alpha, beta)
+    kxx.flat[:: len(kxx) + 1] += noise
+    kxw = kernel_points(observed, candidates, alpha, beta)
+    factor = cho_factor(kxx, lower=True, check_finite=False)
+    solved_akx = cho_solve(factor, akx.T, check_finite=False)
+    solved_kxw = cho_solve(factor, kxw, check_finite=False)
+    c = aka - akx @ solved_akx
+    c = (c + c.T) / 2
+    b = akw - akx @ solved_kxw
+    variance = np.maximum(
+        outputscale + noise - np.sum(kxw * solved_kxw, axis=0),
+        np.finfo(float).tiny,
+    )
+    # The same small numerical stabilizer is used by the existing posterior
+    # implementation. It is immaterial on the explicit-grid parity cases.
+    c.flat[:: len(c) + 1] += 1e-10
+    c_factor = cho_factor(c, lower=True, check_finite=False)
+    rho = np.sum(
+        b * cho_solve(c_factor, b, check_finite=False), axis=0
+    ) / variance
+    scores = -0.5 * np.log1p(-np.clip(rho, 0.0, 1.0 - 1e-12))
+    live_bytes += sum(
+        array.nbytes
+        for array in (aka, akx, akw, kxx, kxw, c, b, variance, scores)
+    )
+    return EIGBatchResult(
+        scores=scores,
+        aka_operations=operations,
+        efficient_peak_bytes=live_bytes,
+    )
 
 
 def naive_eig(

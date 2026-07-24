@@ -15,3 +15,13 @@ At author commit `162ce44fe380c7c11b959fc85206b5dcdeddff58`,
 separately with `time.perf_counter()`. The acquisition is the vectorized
 `EIGFunctionProperty`; it is not the one-candidate complexity diagnostic used
 for Claim 1.
+
+The large-game configurations
+`shapleig_crv_tree_{corrgroup,nhanesi,crime}.yaml` set `scalability_mode: true`,
+`Subset.subset_size: 1024`, five MAP restarts, and the
+`init_64_factor_4` refit schedule. They run 451, 432, and 410 adaptive
+iterations after p+1 initial coalitions, respectively, reaching total budget
+512 for p=60, 79, and 101. `ShapleyApplication.run_lazy_setup` constructs the
+fixed candidate subset with the uniform-cardinality PolySHAP sampler and
+pairing trick. This source was retrieved from GitHub on 2026-07-24 at the
+commit above.
