@@ -1,29 +1,20 @@
 # STATUS — ShaplEIG (`ub9PwBtHqD`)
 
-**Session:** perfect-score campaign. **Last updated:** 2026-07-18. **State:** official high-quality perfect score, 4/4.
+**Last updated:** 2026-07-23. **State:** published; awaiting live judge.
 
-GitHub: `MachineLearning-Nerd/icml26-repro-ub9PwBtHqD-shapleig` at public evidence SHA
-`00929ce` (implementation `1d9b620`). HF Space: `DineshAI/ub9PwBtHqD` at
-exact SHA `69a5618000de4028d81d357542710df9d19145fb`.
+Hugging Face Space: `DineshAI/ub9PwBtHqD` at exact revision
+`6902e5b8008725541c7361d2e6c9f36cd09f5537`.
 
-## Source
-- arXiv 2606.02247. Clean-room from PDF. Linear-Gaussian Shapley BED model.
+## Current evidence
 
-## Evidence
-- **C1 verified:** closed-form EIG (Eq. 3) matches independent MC mutual
-  information (worst 0.0023); posterior cov matches GP Schur form (9.4e-16).
-- **C2 full-scale repair verified officially:** all 30 official ImageNet/ViT-9
-  local-explanation games (512 coalitions each), 11 methods, five budgets, and
-  realized MSE. Adaptive ShaplEIG has a paired geometric-mean MSE ratio below
-  one against all six SOTA baselines; worst ratio is **0.578** vs RegressionMSR
-  (95% CI **[0.457, 0.724]**). All paired p-values `<5e-5`.
-- LeverageSHAP and RegressionMSR match pinned author source exactly on five
-  comparisons (`max_abs_diff=0.0`).
-- **18/18 tests pass**; 14 approach/ablation routes executed.
+- Claim 1: **VERIFIED**.
+- Claim 2: full 15-task claim **BLOCKED**; new **TOY** subset executes four
+  exact tasks, two families, 30 games per task, and budgets through 64.
+- Claim 3: **FALSIFIED** under the registered broad judge-claim contract.
+- Claim 4: **FALSIFIED**.
+- Claim 5: full overhead claim **BLOCKED**; new **TOY** subset contains 80
+  decomposed timing cells at 9–10 players.
 
-## Official verdict
-- Judged `2026-07-18T10:53:23Z` at exact Space SHA `69a5618` by
-  `zai-org/GLM-5.2`: C1 `verified`, C2 `verified`, quality `high`, **4/4**.
-- Official leaderboard readback after the verdict: DineshAI **195/216** across
-  40 judged logbooks (rank 4 at capture time).
-- This tick is complete. Next perfect-score target: `QO82qIzEsP`.
+The published update is additive: all 73 files from the prior Space revision
+and all 21 files from the originally judged revision remain reachable. No
+score increase is claimed until the live judge evaluates the new revision.

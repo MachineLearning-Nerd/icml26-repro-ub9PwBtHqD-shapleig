@@ -157,9 +157,18 @@ The exact Claim 3 search ran at Git SHA
 `362569f32fd64fd72e4123f2c408e08f5157afda`
 on local Apple-arm64 CPU with 8 logical CPUs, Python 3.12.11, and no GPU. Wall
 time was 990.35 s, including 582.80 s for the three-task Claim 3 search;
-external compute cost was $0. Successful campaign runs through this node total
-about 54 minutes of local CPU wall time, plus one retained failed Claim 1
+external compute cost was $0. The immutable cumulative release gate at
+`41e18730182ef850f19ea8b5d40817619972baf6` regenerated the evidence in
+29m26s (entrypoint time 1761.92 s). Successful campaign runs through that gate
+total 83m34s of local CPU wall time, plus one retained failed Claim 1
 diagnostic run.
+
+The release validator proves that all 21 files from judged Space revision
+`85ca787e52cd4ba933883116d010d919bfe54fe7` remain in the 73-file candidate.
+All historical files are byte-identical except the additively extended
+`logbook.json`. Its exact 53-path text upload allowlist matches the changed
+file set; all uploads are UTF-8, all JSON parses, and no NUL or secret-pattern
+file was detected. Nothing has been published to Hugging Face.
 
 Raw evidence lives under `.openresearch/artifacts/claim_1` through
 `.openresearch/artifacts/claim_5`. The public tutorial notebook embeds the

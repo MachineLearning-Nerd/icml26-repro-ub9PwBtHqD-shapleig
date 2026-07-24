@@ -1,0 +1,7 @@
+{
+  "verifier_exit": 0,
+  "raw_rows": 80,
+  "expected_rows": 80,
+  "aggregate_cells": 16,
+  "negative_control_detected": true
+}

@@ -1,0 +1,7 @@
+{
+  "verifier_exit": 0,
+  "raw_rows": 600,
+  "expected_rows": 600,
+  "aggregate_cells": 20,
+  "dropped_task_control_detected": true
+}
